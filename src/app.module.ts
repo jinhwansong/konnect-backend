@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 import { join } from 'path';
 import { Likes } from './entities/Likes';
 import { Comments } from './entities/Comments';
@@ -28,9 +27,6 @@ import { PaymentsModule } from './payments/payments.module';
 import { MentoringModule } from './mentoring/mentoring.module';
 import { Review } from './entities/Review';
 import { Notification } from './entities/Notification';
-import { NotificationModule } from './notification/notification.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -89,9 +85,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ProgramsModule,
     PaymentsModule,
     MentoringModule,
-    NotificationModule,
-    EventEmitterModule.forRoot(),
-    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

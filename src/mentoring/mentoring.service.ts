@@ -4,16 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dto/page.dto';
 import { SearchDto } from 'src/common/dto/search.dto';
-import { NotiEvent } from 'src/common/event/noti.event';
 import { AvailableSchedule } from 'src/entities/AvailableSchedule';
 import { Contact } from 'src/entities/Contact';
 import { MentoringPrograms } from 'src/entities/MentoringPrograms';
 import { MentorProfile } from 'src/entities/MentorProfile';
-import { NotificationType } from 'src/entities/Notification';
 import { MemtoringStatus, Reservations } from 'src/entities/Reservations';
 import { MentoingProgramCreateDto } from 'src/mentoring/dto/program.request.dto';
 import { DataSource, Repository } from 'typeorm';
@@ -31,7 +28,6 @@ export class MentoringService {
     private readonly reservationRepository: Repository<Reservations>,
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>,
-    private eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
   ) {}
   // 멘토링 프로그램 등록
@@ -501,21 +497,6 @@ export class MentoringService {
             : MemtoringStatus.CANCELLED,
           reason: !approved ? reason : null,
         },
-      );
-      // 알림생성
-      this.eventEmitter.emit(
-        'mentoring.created',
-        new NotiEvent(
-          reservation.user.id,
-          approved
-            ? `${reservation.programs.title} 멘토링이 승인되었습니다.`
-            : `${reservation.programs.title} 멘토링이 거절되었습니다.`,
-          approved
-            ? NotificationType.RESERVATION_CONFIRMED
-            : NotificationType.RESERVATION_REJECTED,
-          reservation.id,
-          reservation.programs.id,
-        ),
       );
       await queryRunner.commitTransaction();
       return { message: '예약을 완료하셨습니다' };

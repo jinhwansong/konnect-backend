@@ -8,7 +8,6 @@ import { AvailableSchedule } from 'src/entities/AvailableSchedule';
 import { MentoringPrograms } from 'src/entities/MentoringPrograms';
 import { Reservations } from 'src/entities/Reservations';
 import { Notification } from 'src/entities/Notification';
-import { NotificationService } from 'src/notification/notification.service';
 import { Users } from 'src/entities/Users';
 
 @Module({
@@ -24,6 +23,6 @@ import { Users } from 'src/entities/Users';
     ]),
   ],
   controllers: [MentoringController],
-  providers: [MentoringService, NotificationService],
+  providers: [MentoringService],
 })
 export class MentoringModule {}
