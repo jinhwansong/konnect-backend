@@ -20,7 +20,7 @@ import { PaymentsListDto, RefundPaymentsDto } from './dto/payments.request';
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly PaymentService: PaymentsService) {}
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '프로그램 결제 목록' })
   @ApiResponse({
     status: 200,
@@ -30,21 +30,12 @@ export class PaymentsController {
   @ApiResponse({
     status: 500,
     description: '결제 목록 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '결제 목록 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @Get('')
   get(@User() user, @Query() query: PaginationDto) {
     return this.PaymentService.get(user.id, query);
   }
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '프로그램 결제 환불' })
   @ApiResponse({
     status: 200,
@@ -53,15 +44,6 @@ export class PaymentsController {
   @ApiResponse({
     status: 500,
     description: '환불 처리 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '환불 처리 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @Post('cancel')
   getCancel(@User() user, @Body() body: RefundPaymentsDto) {

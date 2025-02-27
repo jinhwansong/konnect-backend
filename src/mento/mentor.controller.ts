@@ -52,7 +52,7 @@ export class MentorController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 신청' })
   @Post()
   async MentorApplication(@Body() body: MentorRequestDto, @User() user) {
@@ -67,7 +67,7 @@ export class MentorController {
     status: 500,
     description: '멘토님의 정보를 찾던 도중 오류가 발생했습니다.',
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로필정보' })
   @Get()
   async getMentor(@User() user) {
@@ -91,7 +91,7 @@ export class MentorController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 연차 변경' })
   @Patch('career')
   career(@Body() body: UpdateCareerDto, @User() user) {
@@ -106,7 +106,7 @@ export class MentorController {
     status: 500,
     description: '파일 업로드 중 오류가 발생했습니다.',
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '프로필이미지 변경' })
   @UseInterceptors(FileInterceptor('image', multerImage()))
   @Patch('profile')
@@ -131,7 +131,7 @@ export class MentorController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 회사명 변경' })
   @Patch('company')
   company(@Body() body: UpdateCompanyDto, @User() user) {
@@ -155,7 +155,7 @@ export class MentorController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 자기소개 변경' })
   @Patch('introduce')
   introduce(@Body() body: UpdateIntroduceDto, @User() user) {
@@ -180,7 +180,7 @@ export class MentorController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '이미지 변경' })
   @Post('images')
   @UseInterceptors(FilesInterceptor('images[]', 10, multerImage()))
@@ -208,7 +208,7 @@ export class MentorController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 전문분야 변경' })
   @Patch('position')
   position(@Body() body: UpdatePositionDto, @User() user) {

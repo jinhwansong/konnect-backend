@@ -33,21 +33,6 @@ export class UsersService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    if (!body.email) {
-      throw new BadRequestException('이메일을 작성해주세요.');
-    }
-    if (!body.password) {
-      throw new BadRequestException('비밀번호를 작성해주세요.');
-    }
-    if (!body.name) {
-      throw new BadRequestException('이름을 작성해주세요.');
-    }
-    if (!body.nickname) {
-      throw new BadRequestException('닉네임을 작성해주세요.');
-    }
-    if (!body.phone) {
-      throw new BadRequestException('휴대폰번호를 작성해주세요.');
-    }
     // 중복사용자
     const user = await queryRunner.manager.getRepository(Users).findOne({
       where: { email: body.email },

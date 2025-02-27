@@ -22,7 +22,7 @@ export class PaymentsService {
   async comfirmPayment(body: PaymentVerificationDto) {
     try {
       const response = await firstValueFrom(
-        await this.httpService
+        this.httpService
           .post(
             'https://api.tosspayments.com/v1/payments/confirm',
             {
@@ -53,13 +53,13 @@ export class PaymentsService {
             catchError(async (error) => {
               // 이미 처리된 경우에는?
               if (error.response?.data.code === 'ALREADY_PROCESSED_PAYMENT') {
-                return Promise.resolve({
+                return {
                   data: {
                     status: 'DONE',
                     totalAmount: error.response.data.totalAmount,
                     receiptUrl: error.response.data.receipt.url,
                   },
-                });
+                };
               }
               throw error;
             }),
@@ -127,52 +127,48 @@ export class PaymentsService {
   }
   // 구매 취소
   async getCancel(id: number, paymentKey: string) {
-    try {
-      const result = await this.dataSource.transaction(async (manager) => {
-        const payment = await this.paymentRepository.findOne({
-          where: { paymentKey, userId: id },
-          relations: ['reservation'],
-        });
-        if (!payment) {
-          throw new BadRequestException(
-            '결제 정보를 찾을 수 없거나 권한이 없습니다.',
-          );
-        }
-        if (payment.reservation.status === MemtoringStatus.COMPLETED) {
-          throw new BadRequestException('이미 진행된 멘토링 입니다.');
-        }
-        const response = await firstValueFrom(
-          this.httpService.post(
-            `https://api.tosspayments.com/v1/payments/${paymentKey}/cancel`,
-            {
-              cancelReason: '구매자가 취소를 원함',
-            },
-            {
-              headers: {
-                Authorization: `Basic ${Buffer.from(
-                  `${process.env.TOSS_SECRET}:`,
-                ).toString('base64')}`,
-                'Content-Type': 'application/json',
-              },
-            },
-          ),
-        );
-        if (response.data?.status === 'CANCELED') {
-          payment.status = PaymentStatus.REFUNDED;
-          await manager.save(payment);
-          if (payment.reservation) {
-            payment.reservation.status = MemtoringStatus.CANCELLED;
-            await manager.save(Reservations, payment.reservation);
-          }
-          return {
-            message: '환불 및 예약이 취소되었습니다',
-            status: PaymentStatus.REFUNDED,
-          };
-        }
+    return this.dataSource.transaction(async (manager) => {
+      const payment = await this.paymentRepository.findOne({
+        where: { paymentKey, userId: id },
+        relations: ['reservation'],
       });
-      return result;
-    } catch (error) {
+      if (!payment) {
+        throw new BadRequestException(
+          '결제 정보를 찾을 수 없거나 권한이 없습니다.',
+        );
+      }
+      if (payment.reservation.status === MemtoringStatus.COMPLETED) {
+        throw new BadRequestException('이미 진행된 멘토링 입니다.');
+      }
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `https://api.tosspayments.com/v1/payments/${paymentKey}/cancel`,
+          {
+            cancelReason: '구매자가 취소를 원함',
+          },
+          {
+            headers: {
+              Authorization: `Basic ${Buffer.from(
+                `${process.env.TOSS_SECRET}:`,
+              ).toString('base64')}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        ),
+      );
+      if (response.data?.status === 'CANCELED') {
+        payment.status = PaymentStatus.REFUNDED;
+        await manager.save(payment);
+        if (payment.reservation) {
+          payment.reservation.status = MemtoringStatus.CANCELLED;
+          await manager.save(Reservations, payment.reservation);
+        }
+        return {
+          message: '환불 및 예약이 취소되었습니다',
+          status: PaymentStatus.REFUNDED,
+        };
+      }
       throw new BadRequestException('환불 처리 중 오류가 발생했습니다.');
-    }
+    });
   }
 }

@@ -51,7 +51,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토링 관리 조회' })
   @Get('schedule')
   getSchedule(@User() user, @Query() query: PaginationDto) {
@@ -75,7 +75,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 검색' })
   @Get('search')
   search(@User() user, @Query() searchDto: SearchDto) {
@@ -99,7 +99,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램등록' })
   @Post('')
   create(@Body() body: MentoingProgramCreateDto, @User() user) {
@@ -123,7 +123,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 수정' })
   @Patch(':id')
   update(
@@ -150,7 +150,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 삭제' })
   @Delete(':id')
   deleteProgram(@User() user, @Param('id', ParseIntPipe) id: number) {
@@ -174,7 +174,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 조회' })
   @Get('')
   get(@User() user, @Query() query: PaginationDto) {
@@ -198,7 +198,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 상세조회' })
   @Get(':id')
   detail(@User() user, @Param('id', ParseIntPipe) id: number) {
@@ -222,7 +222,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 상세조회' })
   @Get('schedule/:id')
   detailSchedule(@User() user, @Param('id', ParseIntPipe) id: number) {
@@ -245,7 +245,7 @@ export class MentoringController {
       },
     },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '예약 승인/거절' })
   @Post('schedule/:id')
   approve(

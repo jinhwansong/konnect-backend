@@ -40,15 +40,6 @@ export class ProgramsController {
   @ApiResponse({
     status: 500,
     description: '프로그램 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '프로그램 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @ApiOperation({ summary: '프로그램 불러오기' })
   @Get(':id')
@@ -62,18 +53,9 @@ export class ProgramsController {
   @ApiResponse({
     status: 500,
     description: '시간 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '시간 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @ApiOperation({ summary: '가능한 날짜 조회' })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @Get(':id/month')
   getAvailableDates(
     @Param('id', ParseIntPipe) id: number,
@@ -90,18 +72,9 @@ export class ProgramsController {
   @ApiResponse({
     status: 500,
     description: '시간 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '시간 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @ApiOperation({ summary: '가능한 시간 조회' })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @Get(':id/times')
   getTimeSlots(
     @Param('id', ParseIntPipe) id: number,

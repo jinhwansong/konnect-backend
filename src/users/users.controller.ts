@@ -39,8 +39,8 @@ import { RedisService } from 'src/redis/redis.service';
 @Controller('users')
 export class UsersController {
   constructor(
-    private userService: UsersService,
-    private redisService: RedisService,
+    private readonly userService: UsersService,
+    private readonly redisService: RedisService,
   ) {}
 
   @ApiResponse({
@@ -84,12 +84,6 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: '중복된 이메일이 존재합니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 400 },
-        message: { type: 'string', example: '중복된 이메일이 존재합니다.' },
-      },
-    },
   })
   @ApiOperation({ summary: '이메일 중복검사' })
   @Post('checkEmail')
@@ -104,12 +98,6 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: '이미 사용 중인 닉네임입니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 400 },
-        message: { type: 'string', example: '이미 사용 중인 닉네임입니다.' },
-      },
-    },
   })
   @ApiOperation({ summary: '닉네임 중복검사' })
   @Post('checkNickname')
@@ -126,7 +114,7 @@ export class UsersController {
     description: '서버에러',
   })
   @ApiOperation({ summary: '로그인' })
-  @UseGuards(new LocalAuthGuard())
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   logIn(@User() user) {
     return user;
@@ -199,7 +187,7 @@ export class UsersController {
     status: 500,
     description: '서버에러',
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '로그아웃' })
   @Post('logout')
   logOut(@Req() req, @Res() res) {
@@ -231,14 +219,8 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: '이미 존재하는 닉네임입니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 400 },
-        message: { type: 'string', example: '이미 존재하는 닉네임입니다.' },
-      },
-    },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '닉네임 변경' })
   @Patch('nickname')
   nickname(@Body() body: UpdateNicknameDto, @User() user) {
@@ -252,17 +234,8 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: '현재 비밀번호가 일치하지 않습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 400 },
-        message: {
-          type: 'string',
-          example: '현재 비밀번호가 일치하지 않습니다.',
-        },
-      },
-    },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '비밀번호 변경' })
   @Patch('password')
   password(@Body() body: UpdatePasswordDto, @User() user) {
@@ -276,17 +249,8 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: '이미 존재하는 휴대폰 번호입니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 400 },
-        message: {
-          type: 'string',
-          example: '이미 존재하는 휴대폰 번호입니다.',
-        },
-      },
-    },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '휴대폰번호 변경' })
   @Patch('phone')
   phone(@Body() body: UpdatePhoneDto, @User() user) {
@@ -300,17 +264,8 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: '지원하지 않는 이미지 형식입니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 400 },
-        message: {
-          type: 'string',
-          example: '지원하지 않는 이미지 형식입니다.',
-        },
-      },
-    },
   })
-  @UseGuards(new LoggedInGuard())
+  @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '프로필이미지 변경' })
   @UseInterceptors(FileInterceptor('image', multerImage()))
   @Patch('profile')

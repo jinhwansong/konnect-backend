@@ -16,7 +16,7 @@ export class NaverAuthGuard extends AuthGuard('naver') {
 
     try {
       // naver 인증 시도
-      const result = (await super.canActivate(context)) as boolean;
+      const result = await super.canActivate(context);
       // 인증 성공 시 세션에 저장
       if (result) {
         await super.logIn(req); // 세션에 저장

@@ -16,17 +16,10 @@ declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  if (process.env.NODE_ENV === 'production') {
-    app.enableCors({
-      origin: 'http://localhost:3000',
-      credentials: true,
-    });
-  } else {
-    app.enableCors({
-      origin: 'http://localhost:3000',
-      credentials: true,
-    });
-  }
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+  });
   // 레디스 클라이언트 생성
   let redisClient;
   if (!redisClient) {
@@ -55,17 +48,15 @@ async function bootstrap() {
       store: new RedisStore({
         client: redisClient,
         prefix: 'session:', // 세션 키에 사용할 접두사
-        ttl: 60 * 60 * 1, // 1시간
+        ttl: 3600, // 1시간
         disableTouch: true,
         rolling: true,
         enableOfflineQueue: false,
       }),
       cookie: {
         httpOnly: true,
-        secure: false,
-        maxAge: 1000 * 60 * 60,
-        domain: 'localhost',
-        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 3600000,
         sameSite: 'lax',
       },
     }),
@@ -76,18 +67,10 @@ async function bootstrap() {
   // 업로드 폴더 생성
   createUploadFolder();
   // 이미지 정적 파일
-  app.useStaticAssets(path.join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads',
-  });
+  const uploadsPath = path.join(__dirname, '..', 'uploads');
+  app.useStaticAssets(uploadsPath, { prefix: '/uploads' });
   // 예외처리
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true, // 필수
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   // 스웨거 설정
   const config = new DocumentBuilder()

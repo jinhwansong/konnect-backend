@@ -22,9 +22,6 @@ import { weeklyScheduleDto } from 'src/common/dto/time.dto';
 import { Payments, PaymentStatus } from 'src/entities/Payments';
 import { PaymentsService } from 'src/payments/payments.service';
 import { PaginationDto } from 'src/common/dto/page.dto';
-import { NotificationType } from 'src/entities/Notification';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotiEvent } from 'src/common/event/noti.event';
 import { Contact } from 'src/entities/Contact';
 
 @Injectable()
@@ -39,7 +36,6 @@ export class ReservationService {
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>,
     private readonly tossPaymentService: PaymentsService,
-    private eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
   ) {}
   // 프로그램 예약
@@ -49,38 +45,7 @@ export class ReservationService {
     await queryRunner.startTransaction();
     try {
       // 만료된 예약 시간 삭제
-      const expired = await this.reservationRepository
-        .createQueryBuilder('reservation')
-        .select('reservation.id')
-        .where('reservation.status = :status', {
-          status: MemtoringStatus.PENDING,
-        })
-        .andWhere('reservation.expire < :now', {
-          now: new Date(),
-        })
-        .getMany();
-      // 해당되는 id 가져오기
-      const expriedId = expired.map((r) => r.id);
-      if (expriedId.length > 0) {
-        // contact 삭제
-        await this.contactRepository
-          .createQueryBuilder()
-          .delete()
-          .where('reservationId IN (:...expriedId)', { expriedId })
-          .execute();
-        // contact 삭제
-        await this.paymentsRepository
-          .createQueryBuilder()
-          .delete()
-          .where('reservationId IN (:...expriedId)', { expriedId })
-          .execute();
-        // reservation 삭제
-        await this.reservationRepository
-          .createQueryBuilder()
-          .delete()
-          .where('id IN (:...expriedId)', { expriedId })
-          .execute();
-      }
+      await this.cleanExpired();
       // 프로그램 유무 스케줄 정보 조회
       const program = await queryRunner.manager
         .createQueryBuilder(MentoringPrograms, 'program')
@@ -150,17 +115,6 @@ export class ReservationService {
         reservationId: reservation.id,
         userId: id,
       });
-      // 알림생성
-      this.eventEmitter.emit(
-        'reservation.created',
-        new NotiEvent(
-          program.profile.user.id,
-          `새로운 멘토링 신청이 있습니다: ${program.title}`,
-          NotificationType.RESERVATION_REQUESTED,
-          reservation.id,
-          program.id,
-        ),
-      );
       await queryRunner.manager.save(payment);
       await queryRunner.commitTransaction();
       return {
@@ -174,6 +128,40 @@ export class ReservationService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+  // 만료된 예약
+  private async cleanExpired() {
+    const expired = await this.reservationRepository
+      .createQueryBuilder('reservation')
+      .select('reservation.id')
+      .where('reservation.status = :status', {
+        status: MemtoringStatus.PENDING,
+      })
+      .andWhere('reservation.expire < :now', {
+        now: new Date(),
+      })
+      .getMany();
+    const expiredIds = expired.map((r) => r.id);
+
+    if (expiredIds.length > 0) {
+      await Promise.all([
+        this.contactRepository
+          .createQueryBuilder()
+          .delete()
+          .where('reservationId IN (:...expiredIds)', { expiredIds })
+          .execute(),
+        this.paymentsRepository
+          .createQueryBuilder()
+          .delete()
+          .where('reservationId IN (:...expiredIds)', { expiredIds })
+          .execute(),
+        this.reservationRepository
+          .createQueryBuilder()
+          .delete()
+          .where('id IN (:...expiredIds)', { expiredIds })
+          .execute(),
+      ]);
     }
   }
   private checkTime(

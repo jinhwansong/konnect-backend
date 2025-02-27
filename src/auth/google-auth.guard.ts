@@ -15,7 +15,7 @@ export class GoogleAuthGuard extends AuthGuard('google') {
     const req = context.switchToHttp().getRequest();
     try {
       // 구글 인증 시도
-      const result = (await super.canActivate(context)) as boolean;
+      const result = await super.canActivate(context);
       // 인증 성공 시 세션에 저장
       if (result) {
         await super.logIn(req); // 세션에 저장

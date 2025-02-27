@@ -2,11 +2,10 @@ import { Module } from '@nestjs/common';
 import { ProgramsController } from './programs.controller';
 import { ProgramsService } from './programs.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MentoringPrograms } from 'src/entities/MentoringPrograms';
-import { Reservations } from 'src/entities/Reservations';
+import * as Entities from 'src/entities';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MentoringPrograms, Reservations])],
+  imports: [TypeOrmModule.forFeature(Object.values(Entities))],
   controllers: [ProgramsController],
   providers: [ProgramsService],
 })
