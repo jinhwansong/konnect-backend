@@ -17,9 +17,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
+          node-version: '22.11.0'  # 현재 사용 중인 Node.js 버전
           cache: 'npm'
-          cache-dependency-path: './backend/package-lock.json'
+          cache-dependency-path: './package-lock.json'
       
       # 의존성 설치
       - name: Install dependencies
@@ -74,7 +74,7 @@ jobs:
             cd ~/konnent/backend
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh
-            nvm use 22 || nvm install 22  # 버전이 없으면 설치
+            nvm use 22 || nvm install 22
             
             # npmrc 충돌 해결
             nvm use --delete-prefix 22 --silent
