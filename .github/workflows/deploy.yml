@@ -17,9 +17,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22.11.0'  # 현재 사용 중인 Node.js 버전
+          node-version: '22.11.0'
           cache: 'npm'
-          cache-dependency-path: './package-lock.json'
+          cache-dependency-path: './backend/package-lock.json'
       
       # 의존성 설치
       - name: Install dependencies
