@@ -1,27 +1,74 @@
-- name: Deploy on EC2
-  uses: appleboy/ssh-action@master
-  with:
-    script: |
-      # 배포 디렉토리 준비
-      mkdir -p ~/konnect-backend
-      cd ~/deployment
-      unzip -o deployment.zip -d ~/konnect-backend
+name: Deploy to EC2
 
-      # 이후 모든 경로를 ~/konnect-backend로 변경
-      cd ~/konnect-backend
-      
-      # Node.js 및 npm 설정
-      export NVM_DIR=~/.nvm
-      source ~/.nvm/nvm.sh
-      
-      # pm2 설치
-      npm install -g pm2
-      
-      # 의존성 설치
-      npm ci --omit=dev
-      
-      # 애플리케이션 재시작
-      pm2 delete konnect-backend || true
-      pm2 start npm --name "konnect-backend" -- run start:prod
+on:
+  push:
+    branches: [ main ]
 
-      echo "Deployment completed successfully!"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p deployment
+          cp -r dist package.json package-lock.json deployment/
+          cd deployment && zip -r ../deployment.zip .
+      
+      - name: Upload to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "deployment.zip"
+          target: "~/deployment"
+      
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 필요한 도구 설치
+            sudo apt-get update
+            sudo apt-get install -y unzip nodejs npm
+
+            # 배포 디렉토리 준비
+            mkdir -p ~/konnect-backend
+            cd ~/deployment
+            unzip -o deployment.zip -d ~/konnect-backend
+
+            # 이후 모든 경로를 ~/konnect-backend로 변경
+            cd ~/konnect-backend
+            
+            # Node.js 및 npm 설정
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            
+            # pm2 설치
+            npm install -g pm2
+            
+            # 의존성 설치
+            npm ci --omit=dev
+            
+            # 애플리케이션 재시작
+            pm2 delete konnect-backend || true
+            pm2 start npm --name "konnect-backend" -- run start:prod
+
+            echo "Deployment completed successfully!"
