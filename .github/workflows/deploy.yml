@@ -1,5 +1,6 @@
-name: Deploy to EC2  # main 브랜치에 push할 때 실행
+name: Deploy to EC2
 
+# main 브랜치에 push할 때 실행
 on:
   push:
     branches: [ main ]
@@ -18,27 +19,25 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: 'backend/package-lock.json'
+          cache-dependency-path: './backend/package-lock.json'
       
       # 의존성 설치
       - name: Install dependencies
-        run: |
-          cd backend
-          npm ci
+        working-directory: ./backend
+        run: npm ci
       
       # 프로젝트 빌드
       - name: Build
-        run: |
-          cd backend
-          npm run build
+        working-directory: ./backend
+        run: npm run build
       
       # 배포 패키지 생성
       - name: Create deployment package
         run: |
-          cd backend
-          mkdir -p ../deployment
-          cp -r dist package.json package-lock.json ../deployment/
-          cd ../deployment && zip -r ../deployment.zip .
+          mkdir -p deployment
+          cp -r backend/dist backend/package.json backend/package-lock.json deployment/
+          cd deployment
+          zip -r ../deployment.zip .
       
       # EC2로 파일 전송
       - name: Upload to EC2
@@ -85,7 +84,9 @@ jobs:
             
             # 프로덕션 의존성만 설치
             npm ci --production
-            pm2 delete konnect-backend || true  # 기존 프로세스 삭제
+            
+            # 기존 프로세스 삭제 및 새 프로세스 시작
+            pm2 delete konnect-backend || true
             pm2 start npm --name "konnect-backend" -- run start:prod
             
             # 로그 확인을 위한 출력
