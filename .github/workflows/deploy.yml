@@ -47,26 +47,37 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # 필요한 도구 설치 확인
             sudo apt-get update
             sudo apt-get install -y unzip
             
+            # 배포 디렉토리 준비
             mkdir -p ~/deployment/temp
             cd ~/deployment
             unzip -o deployment.zip -d temp
             
-            mkdir -p ~/konnect/backend
-            cp -a temp/. ~/konnect/backend/
+            # 백엔드 디렉토리에 파일 복사
+            mkdir -p ~/konnent/backend
+            cp -a temp/. ~/konnent/backend/
             
-            cd ~/konnect/backend
-            
+            # Node.js 환경 설정
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh
-            nvm use 22 || nvm install 22
             
+            # 필요한 Node.js 버전 설치 및 사용
+            nvm install 22 || true
+            nvm use 22
+            
+            # npm 글로벌 도구 설치
             npm install -g pm2
             
+            # 백엔드 디렉토리로 이동
+            cd ~/konnent/backend
+            
+            # 의존성 설치
             npm ci --production
             
+            # 기존 프로세스 삭제 및 새 프로세스 시작
             pm2 delete konnect-backend || true
             pm2 start npm --name "konnect-backend" -- run start:prod
             
