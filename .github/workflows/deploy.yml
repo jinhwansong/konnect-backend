@@ -1,6 +1,5 @@
 name: Deploy to EC2
 
-# main 브랜치에 push할 때 실행
 on:
   push:
     branches: [ main ]
@@ -9,34 +8,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
       
-      # Node.js 설정
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22'
           cache: 'npm'
       
-      # 의존성 설치
       - name: Install dependencies
         run: npm ci
       
-      # 프로젝트 빌드
       - name: Build project
         run: npm run build
       
-      # 배포 패키지 생성
       - name: Create deployment package
         run: |
           mkdir -p deployment
           cp -r dist package.json package-lock.json deployment/
-          
           cd deployment && zip -r ../deployment.zip .
       
-      # EC2로 파일 전송
       - name: Upload to EC2
         uses: appleboy/scp-action@master
         with:
@@ -46,7 +38,6 @@ jobs:
           source: "deployment.zip"
           target: "~/deployment"
       
-      # EC2에서 배포 실행
       - name: Deploy on EC2
         uses: appleboy/ssh-action@master
         with:
@@ -54,18 +45,34 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            mkdir -p ~/deployment/temp
+            # 필요한 도구 설치
+            sudo apt-get update
+            sudo apt-get install -y unzip nodejs npm
+
+            # 배포 디렉토리 준비
+            mkdir -p ~/konnent/backend
             cd ~/deployment
-            unzip -o deployment.zip -d temp
+            unzip -o deployment.zip -d ~/konnent/backend
+
+            # Node.js 및 npm 설정
+            sudo npm install -g n
+            sudo n 22
             
-            cp -a temp/. ~/konnent/backend/
-            
+            # pm2 설치
+            sudo npm install -g pm2
+
+            # 작업 디렉토리로 이동
             cd ~/konnent/backend
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh
-            
-            # 환경 변수 설정 (GitHub Secrets에서 가져오기)
-            echo "${{ secrets.ENV_FILE }}" > .env
-            
-            npm ci --production
-            pm2 restart konnect-backend
+
+            # npm 설정 초기화
+            npm config delete prefix
+            npm config delete globalconfig
+
+            # 의존성 설치
+            npm ci --omit=dev
+
+            # 애플리케이션 재시작
+            pm2 delete konnect-backend || true
+            pm2 start npm --name "konnect-backend" -- run start:prod
+
+            echo "Deployment completed successfully!"
