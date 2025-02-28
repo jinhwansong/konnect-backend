@@ -53,8 +53,10 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 기존 디렉토리 삭제
-            rm -rf ~/konnect-backend
+            # 기존 디렉토리가 존재하면 백업
+            if [ -d ~/konnect-backend ]; then
+                mv ~/konnect-backend ~/konnect-backend_backup_$(date +"%Y%m%d_%H%M%S")
+            fi
             
             # 배포 디렉토리 준비
             mkdir -p ~/konnect-backend
@@ -79,9 +81,6 @@ jobs:
             # 기존 프로세스 삭제 및 새 프로세스 시작
             pm2 delete konnect-backend || true
             npm run start:prod
-            
-            # 로그 확인
-            pm2 logs konnect-backend
             
             # 로그 확인
             pm2 logs konnect-backend
