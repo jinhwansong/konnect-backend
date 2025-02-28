@@ -32,7 +32,11 @@ jobs:
       - name: Create deployment package
         run: |
           mkdir -p deployment
+<<<<<<< HEAD
           cp -r dist package.json package-lock.json tsconfig.json .env deployment/
+=======
+          cp -r dist package.json package-lock.json deployment/
+>>>>>>> 8e7b555d3780a1a600da8c7be06a7c356feaa04b
           cd deployment && zip -r ../deployment.zip .
       
       # EC2로 파일 전송
@@ -53,15 +57,33 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+<<<<<<< HEAD
             # 기존 디렉토리 삭제
             rm -rf ~/konnect-backend
             
+=======
+            # 디렉토리 및 파일 상태 상세 로깅
+            echo "Current directory contents:"
+            pwd
+            ls -la ~/deployment
+            
+            # 기존 디렉토리 삭제
+            rm -rf ~/konnect-backend
+            
+>>>>>>> 8e7b555d3780a1a600da8c7be06a7c356feaa04b
             # 배포 디렉토리 준비
             mkdir -p ~/konnect-backend
             
             # 배포 패키지 압축 해제
             cd ~/deployment
             unzip -o deployment.zip -d ~/konnect-backend
+<<<<<<< HEAD
+=======
+            
+            # 디렉토리 상태 확인
+            echo "Deployment directory contents after unzip:"
+            ls -la ~/konnect-backend
+>>>>>>> 8e7b555d3780a1a600da8c7be06a7c356feaa04b
             
             # Node.js 환경 설정
             export NVM_DIR=~/.nvm
@@ -70,15 +92,30 @@ jobs:
             # 백엔드 디렉토리로 이동
             cd ~/konnect-backend
             
+<<<<<<< HEAD
             # PM2 글로벌 설치
             npm install -g pm2
             
             # 의존성 설치 (프로덕션 의존성만)
             npm ci --omit=dev
             
+=======
+            # 의존성 설치 (개발 의존성 포함)
+            npm ci
+            
+            # 프로젝트 빌드
+            npm run build
+            
+            # PM2 글로벌 설치
+            npm install -g pm2
+            
+>>>>>>> 8e7b555d3780a1a600da8c7be06a7c356feaa04b
             # 기존 프로세스 삭제 및 새 프로세스 시작
             pm2 delete konnect-backend || true
             npm run start:prod
+            
+            # 로그 확인
+            pm2 logs konnect-backend
             
             # 로그 확인
             pm2 logs konnect-backend
