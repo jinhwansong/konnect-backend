@@ -6,7 +6,7 @@ import multerS3 from 'multer-s3';
 import dotenv from 'dotenv';
 dotenv.config();
 export const multerImage = () => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'production') {
     // s3설정
     const s3 = new S3Client({
       region: process.env.AWS_REGION,

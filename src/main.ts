@@ -14,14 +14,13 @@ import { createUploadFolder } from './common/utils/upload.utils';
 import dotenv from 'dotenv';
 
 declare const module: any;
-
+dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
   });
-  dotenv.config();
   // 레디스 클라이언트 생성
   let redisClient;
   if (!redisClient) {
