@@ -11,6 +11,7 @@ import path from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { createUploadFolder } from './common/utils/upload.utils';
+import dotenv from 'dotenv';
 
 declare const module: any;
 
@@ -20,6 +21,7 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
   });
+  dotenv.config();
   // 레디스 클라이언트 생성
   let redisClient;
   if (!redisClient) {
