@@ -21,7 +21,8 @@ jobs:
         source: '.'
         target: '~/konnect-backend'
         overwrite: true
-    
+        tar_tmp_path: /tmp/github_actions_tmp
+        
     - name: Restart Application
       uses: appleboy/ssh-action@master
       with:
