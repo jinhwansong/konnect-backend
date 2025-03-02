@@ -19,10 +19,9 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         source: '.'
-        target: '~'
+        target: '~/konnect-backend'  # 다시 konnect-backend 디렉토리로 변경
         overwrite: true
-        tar_tmp_path: /tmp/github_actions_tmp
-        
+    
     - name: Restart Application
       uses: appleboy/ssh-action@master
       with:
@@ -30,7 +29,8 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          cd ~
+          rm -rf ~/* # 루트 디렉토리의 모든 파일 및 디렉토리 삭제
+          cd ~/konnect-backend
           npm install
           pm2 delete app || true
           pm2 start npm --name "app" -- start
