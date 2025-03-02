@@ -62,10 +62,23 @@ jobs:
             # 배포 압축 파일 삭제
             rm deployment.tar.gz
             
-            # 프로덕션 의존성만 설치
-            npm ci --omit=dev
+            # 프로덕션 의존성 설치 (--legacy-peer-deps 옵션 추가)
+            npm ci --omit=dev --legacy-peer-deps
             
-            # PM2로 애플리케이션 재시작
-            pm2 restart konnect-backend || pm2 start dist/src/main.js --name konnect-backend
+            # @nestjs/cache-manager 관련 필요한 패키지 설치
+            npm install --save keyv @node-redis/client @node-redis/json
+            
+            # PM2 프로세스 관리 (이미 실행 중이면 중지하고 삭제)
+            if pm2 list | grep -q "konnect-backend"; then
+                echo "기존 PM2 프로세스를 중지합니다..."
+                pm2 stop konnect-backend
+                pm2 delete konnect-backend
+            fi
+            
+            # 새로운 PM2 프로세스 시작
+            NODE_ENV=production pm2 start dist/src/main.js --name konnect-backend
+            
+            # PM2 상태 저장 (재부팅시 자동 시작)
+            pm2 save
             
             echo "Deployment completed successfully!"
