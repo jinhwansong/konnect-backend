@@ -44,6 +44,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "deployment.tar.gz"
           target: "~/konnect-backend"
+          overwrite: true
       
       # EC2에서 배포 실행
       - name: Deploy on EC2
@@ -56,7 +57,10 @@ jobs:
             # 백엔드 디렉토리로 이동
             cd ~/konnect-backend
             
-            # 배포 파일 압축 해제 (기존 파일 덮어쓰기)
+            # 기존 파일 제거
+            rm -rf dist package.json package-lock.json tsconfig.json
+            
+            # 배포 파일 압축 해제
             tar -xzvf deployment.tar.gz
             
             # 배포 압축 파일 삭제
