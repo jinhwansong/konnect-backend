@@ -29,7 +29,7 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          rm -rf ~/* # 루트 디렉토리의 모든 파일 및 디렉토리 삭제
+          mkdir -p ~/konnect-backend  # konnect-backend 디렉토리 생성
           cd ~/konnect-backend
           npm install
           pm2 delete app || true
