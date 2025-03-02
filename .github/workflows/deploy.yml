@@ -19,7 +19,7 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         source: '.'
-        target: '~/project'
+        target: '~/konnect-backend'
         overwrite: true
     
     - name: Restart Application
