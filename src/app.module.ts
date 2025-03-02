@@ -16,6 +16,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { MentoringModule } from './mentoring/mentoring.module';
 import * as Entities from './entities';
 import { DataSource } from 'typeorm';
+import { NotificationController } from './notification/notification.controller';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -60,8 +62,9 @@ import { DataSource } from 'typeorm';
     ProgramsModule,
     PaymentsModule,
     MentoringModule,
+    NotificationModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, NotificationController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {

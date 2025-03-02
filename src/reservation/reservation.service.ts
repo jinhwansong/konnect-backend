@@ -22,7 +22,10 @@ import { weeklyScheduleDto } from 'src/common/dto/time.dto';
 import { Payments, PaymentStatus } from 'src/entities/Payments';
 import { PaymentsService } from 'src/payments/payments.service';
 import { PaginationDto } from 'src/common/dto/page.dto';
+import { NotificationGateway } from 'src/notification/notification.gateway';
+import { NotificationService } from 'src/notification/notification.service';
 import { Contact } from 'src/entities/Contact';
+import { NotificationType } from 'src/entities/Notification';
 
 @Injectable()
 export class ReservationService {
@@ -36,6 +39,8 @@ export class ReservationService {
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>,
     private readonly tossPaymentService: PaymentsService,
+    private readonly notificationService: NotificationService,
+    private readonly notificationGateway: NotificationGateway,
     private readonly dataSource: DataSource,
   ) {}
   // 프로그램 예약
@@ -242,6 +247,22 @@ export class ReservationService {
         Reservations,
         { id: payment.reservationId },
         { status: MemtoringStatus.COMFIRMED },
+      );
+      // 알람 생성
+      const noti = await this.notificationService.create(
+        {
+          message: `${payment.reservation.programs.title} 멘토링이 신청되었습니다.`,
+          type: NotificationType.RESERVATION_REQUESTED,
+          userId: payment.reservation.programs.profile.user.id,
+          reservationId: payment.reservation.id,
+          programId: payment.reservation.programs.id,
+        },
+        queryRunner.manager,
+      );
+      // 트랜잭션 완료 후 실시간 알림 전송
+      this.notificationGateway.sendNotificationToUser(
+        payment.reservation.programs.profile.user.id,
+        noti,
       );
       await queryRunner.commitTransaction();
       return {

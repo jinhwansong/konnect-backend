@@ -28,12 +28,12 @@ jobs:
       - name: Build project
         run: npm run build
       
-      # 배포 패키지 생성
-      - name: Create deployment package
+      # 배포에 필요한 파일만 복사
+      - name: Prepare deployment files
         run: |
           mkdir -p deployment
-          cp -r dist package.json package-lock.json tsconfig.json .env deployment/
-          cd deployment && zip -r ../deployment.zip .
+          cp -r dist package.json package-lock.json tsconfig.json deployment/
+          cd deployment && tar -czvf ../deployment.tar.gz .
       
       # EC2로 파일 전송
       - name: Upload to EC2
@@ -42,8 +42,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "deployment.zip"
-          target: "~/deployment"
+          source: "deployment.tar.gz"
+          target: "~/konnect-backend"
       
       # EC2에서 배포 실행
       - name: Deploy on EC2
@@ -53,37 +53,19 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 기존 디렉토리 삭제
-            rm -rf ~/konnect-backend
-            
-            # 배포 디렉토리 준비
-            mkdir -p ~/konnect-backend
-            
-            # 배포 패키지 압축 해제
-            cd ~/deployment
-            unzip -o deployment.zip -d ~/konnect-backend
-            
-            # Node.js 환경 설정
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh
-            
             # 백엔드 디렉토리로 이동
             cd ~/konnect-backend
             
-            # PM2 글로벌 설치
-            npm install -g pm2
+            # 배포 파일 압축 해제 (기존 파일 덮어쓰기)
+            tar -xzvf deployment.tar.gz
             
-            # 의존성 설치 (프로덕션 의존성만)
+            # 배포 압축 파일 삭제
+            rm deployment.tar.gz
+            
+            # 프로덕션 의존성만 설치
             npm ci --omit=dev
             
-            # 기존 프로세스 삭제 및 새 프로세스 시작
-            pm2 delete konnect-backend || true
-            npm run start:prod
-            
-            # 로그 확인
-            pm2 logs konnect-backend
-            
-            # 로그 확인
-            pm2 logs konnect-backend
+            # PM2로 애플리케이션 재시작
+            pm2 restart konnect-backend || pm2 start dist/main.js --name konnect-backend
             
             echo "Deployment completed successfully!"

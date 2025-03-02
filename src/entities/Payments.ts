@@ -77,7 +77,7 @@ export class Payments {
   @ManyToOne(() => Users, (user) => user.payments)
   @JoinColumn({ name: 'userId' })
   user: Users;
-  // 멘토 예약과의 관계
+  // 예약과의 관계
   @OneToOne(() => Reservations, (reservations) => reservations.payment)
   @JoinColumn({ name: 'reservationId' })
   reservation: Reservations;

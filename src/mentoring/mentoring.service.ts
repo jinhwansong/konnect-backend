@@ -11,8 +11,11 @@ import { AvailableSchedule } from 'src/entities/AvailableSchedule';
 import { Contact } from 'src/entities/Contact';
 import { MentoringPrograms } from 'src/entities/MentoringPrograms';
 import { MentorProfile } from 'src/entities/MentorProfile';
+import { NotificationType } from 'src/entities/Notification';
 import { MemtoringStatus, Reservations } from 'src/entities/Reservations';
 import { MentoingProgramCreateDto } from 'src/mentoring/dto/program.request.dto';
+import { NotificationGateway } from 'src/notification/notification.gateway';
+import { NotificationService } from 'src/notification/notification.service';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
@@ -28,6 +31,8 @@ export class MentoringService {
     private readonly reservationRepository: Repository<Reservations>,
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>,
+    private readonly notificationService: NotificationService,
+    private readonly notificationGateway: NotificationGateway,
     private readonly dataSource: DataSource,
   ) {}
   // 멘토링 프로그램 등록
@@ -498,8 +503,36 @@ export class MentoringService {
           reason: !approved ? reason : null,
         },
       );
+      //알람유형
+      const notiType = approved
+        ? NotificationType.MENTORING_COMPLETED
+        : NotificationType.RESERVATION_REJECTED;
+      // 알람 제목
+      const notiMessage = approved
+        ? `${reservation.programs.title} 멘토링이 승인되었습니다.`
+        : `${reservation.programs.title} 멘토링이 거절되었습니다.`;
+      // 알람 생성
+      const noti = await this.notificationService.create(
+        {
+          message: notiMessage,
+          type: notiType,
+          userId: reservation.user.id,
+          reservationId,
+          programId: reservation.programs.id,
+        },
+        queryRunner.manager,
+      );
+      // 트랜잭션 완료 후 실시간 알림 전송
+      this.notificationGateway.sendNotificationToUser(
+        reservation.user.id,
+        noti,
+      );
       await queryRunner.commitTransaction();
-      return { message: '예약을 완료하셨습니다' };
+      return {
+        message: approved
+          ? '멘토링 승인이 완료되었습니다.'
+          : '멘토링 신청이 거절되었습니다.',
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error instanceof BadRequestException) {
