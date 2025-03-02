@@ -19,7 +19,7 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         source: '.'
-        target: '~/konnect-backend'
+        target: '~'
         overwrite: true
         tar_tmp_path: /tmp/github_actions_tmp
         
@@ -30,7 +30,7 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          cd ~/project
+          cd ~
           npm install
           pm2 delete app || true
           pm2 start npm --name "app" -- start
