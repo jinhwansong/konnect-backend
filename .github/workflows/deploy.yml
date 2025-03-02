@@ -22,7 +22,7 @@ jobs:
         target: '~/project'
         overwrite: true
     
-    - name: Execute Remote Commands
+    - name: Restart Application
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -31,4 +31,5 @@ jobs:
         script: |
           cd ~/project
           npm install
-          pm2 restart app || pm2 start app
+          pm2 delete app || true
+          pm2 start npm --name "app" -- start
