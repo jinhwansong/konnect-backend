@@ -66,6 +66,6 @@ jobs:
             npm ci --omit=dev
             
             # PM2로 애플리케이션 재시작
-            pm2 restart konnect-backend || pm2 start dist/main.js --name konnect-backend
+            pm2 restart konnect-backend || pm2 start dist/src/main.js --name konnect-backend
             
             echo "Deployment completed successfully!"
