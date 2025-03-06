@@ -39,6 +39,10 @@ export enum NotificationType {
   NEW_FOLLOWER = 'new_follower',
   // 게시물 좋아요
   POST_LIKED = 'post_liked',
+  // 예약 승인됨
+  MENTOR_CONFIRMED = 'mento_confirmed',
+  // 예약 거절됨
+  MENTOR_REJECTED = 'mento_rejected',
 }
 @Entity({ schema: 'konnect', name: 'notification' })
 export class Notification {
@@ -68,8 +72,10 @@ export class Notification {
   })
   @Column({ default: false })
   isRead: boolean;
-  @Column()
-  userId: number;
+  @Column({ nullable: true })
+  senderId: number;
+  @Column({ nullable: true })
+  recipientId: number;
   @Column({ nullable: true })
   reservationId: number;
   @Column({ nullable: true })
@@ -78,10 +84,20 @@ export class Notification {
   createdAt: Date;
   @UpdateDateColumn()
   updatedAt: Date;
-  // 유저와 관계설정
-  @ManyToOne(() => Users, (user) => user.notification)
-  @JoinColumn({ name: 'userId' })
-  user: Users;
+  // 발신자
+  @ManyToOne(() => Users, (user) => user.senderNotification, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'senderId' })
+  sender: Users;
+  // 수신자
+  @ManyToOne(() => Users, (user) => user.recipientNotification, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'recipientId' })
+  recipient: Users;
   // 예약 관계설정
   @ManyToOne(() => Reservations, (reservation) => reservation.notification)
   @JoinColumn({ name: 'reservationId' })

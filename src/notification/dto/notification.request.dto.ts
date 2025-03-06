@@ -4,7 +4,8 @@ import { Notification } from 'src/entities';
 export class NotificationDto extends PickType(Notification, [
   'message',
   'type',
-  'userId',
+  'senderId',
   'reservationId',
+  'recipientId',
   'programId',
 ]) {}

@@ -7,6 +7,9 @@ import { Payments, PaymentStatus } from 'src/entities/Payments';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemtoringStatus, Reservations } from 'src/entities/Reservations';
+import { NotificationType } from 'src/entities/Notification';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationGateway } from 'src/notification/notification.gateway';
 
 @Injectable()
 export class PaymentsService {
@@ -16,6 +19,8 @@ export class PaymentsService {
     private readonly paymentRepository: Repository<Payments>,
     @InjectRepository(Reservations)
     private readonly reservationRepository: Repository<Reservations>,
+    private readonly notificationService: NotificationService,
+    private readonly notificationGateway: NotificationGateway,
     private readonly dataSource: DataSource,
   ) {}
   // 결제 승인 요청
@@ -140,6 +145,9 @@ export class PaymentsService {
       if (payment.reservation.status === MemtoringStatus.COMPLETED) {
         throw new BadRequestException('이미 진행된 멘토링 입니다.');
       }
+      if (payment.reservation.status === MemtoringStatus.PROGRESS) {
+        throw new BadRequestException('이미 승인된 멘토링 입니다.');
+      }
       const response = await firstValueFrom(
         this.httpService.post(
           `https://api.tosspayments.com/v1/payments/${paymentKey}/cancel`,
@@ -163,6 +171,20 @@ export class PaymentsService {
           payment.reservation.status = MemtoringStatus.CANCELLED;
           await manager.save(Reservations, payment.reservation);
         }
+        // 알람 생성
+        const noti = await this.notificationService.create({
+          message: `${payment.user.name}님이 ${payment.reservation.programs.title} 멘토링을 취소되었습니다.`,
+          type: NotificationType.RESERVATION_CANCELLED,
+          senderId: payment.user.id,
+          recipientId: payment.reservation.programs.profile.user.id, // 수신자
+          reservationId: payment.reservation.id,
+          programId: payment.reservation.programs.id,
+        });
+        // 트랜잭션 완료 후 실시간 알림 전송
+        this.notificationGateway.sendNotificationToUser(
+          payment.reservation.programs.profile.user.id,
+          noti,
+        );
         return {
           message: '환불 및 예약이 취소되었습니다',
           status: PaymentStatus.REFUNDED,

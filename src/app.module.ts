@@ -18,6 +18,8 @@ import * as Entities from './entities';
 import { DataSource } from 'typeorm';
 import { NotificationController } from './notification/notification.controller';
 import { NotificationModule } from './notification/notification.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -32,26 +34,29 @@ import { NotificationModule } from './notification/notification.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      // 직접 만들고 db에 만들때 처음에 만들때만 true로
-      synchronize: false,
-      // 연결유지
-      keepConnectionAlive: true,
       logging: process.env.NODE_ENV === 'production' ? false : true,
-      poolSize: 20,
       // 마이그레이션
       migrations: [join(__dirname, './migrations/**/*{.ts,.js}')],
       migrationsRun: process.env.NODE_ENV === 'production' ? false : true,
       migrationsTableName: 'migrations',
       // 이모티콘을 사용하기 위해 쓰는거
       charset: 'utf8mb4_general_ci',
+      // 연결유지
+      keepConnectionAlive: true,
       autoLoadEntities: true,
+      retryAttempts: 3,
+      retryDelay: 3000,
+      // 직접 만들고 db에 만들때 처음에 만들때만 true로
+      synchronize: false,
       extra: {
         connectionLimit: 10, // 동시 연결 수 제한
-        connectTimeout: 60000, // 연결 시도 제한 시간 (ms)
         enableKeepAlive: true, // TCP Keep-Alive 활성화
         keepAliveInitialDelay: 30000, // Keep-Alive 초기 지연 시간 (ms)
+        keepConnectionAlive: true,
       },
     }),
+    // 몽고디비
+    MongooseModule.forRoot(process.env.MONGO_URL),
     TypeOrmModule.forFeature(Object.values(Entities)),
     AdminModule,
     ReservationModule,
@@ -63,6 +68,7 @@ import { NotificationModule } from './notification/notification.module';
     PaymentsModule,
     MentoringModule,
     NotificationModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController, NotificationController],
   providers: [AppService],

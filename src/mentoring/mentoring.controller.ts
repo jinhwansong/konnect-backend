@@ -41,15 +41,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '신청된 프로그램이 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '신청된 프로그램이 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토링 관리 조회' })
@@ -65,15 +56,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '멘토님의 프로그램을 검색 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '멘토님의 프로그램을 검색 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 검색' })
@@ -89,15 +71,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '멘토님의 프로그램 등록 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '멘토님의 프로그램 등록 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램등록' })
@@ -113,15 +86,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '멘토님의 프로그램 수정 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '멘토님의 프로그램 수정 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 수정' })
@@ -140,15 +104,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '멘토님의 프로그램 삭제 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '멘토님의 프로그램 삭제 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 삭제' })
@@ -164,15 +119,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '멘토님의 프로그램 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '멘토님의 프로그램 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 조회' })
@@ -188,15 +134,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '멘토님의 프로그램 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '멘토님의 프로그램 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 상세조회' })
@@ -212,15 +149,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '신청된 프로그램이 조회 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '신청된 프로그램이 조회 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '멘토 프로그램 상세조회' })
@@ -235,15 +163,6 @@ export class MentoringController {
   @ApiResponse({
     status: 500,
     description: '프로그램을 승인 처리 중 오류가 발생했습니다.',
-    schema: {
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: {
-          type: 'string',
-          example: '프로그램을 승인 처리 중 오류가 발생했습니다.',
-        },
-      },
-    },
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '예약 승인/거절' })

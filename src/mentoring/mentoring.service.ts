@@ -477,6 +477,7 @@ export class MentoringService {
         .select([
           'reservation.id',
           'reservation.status',
+          'program.id',
           'program.title',
           'reservation.id',
           'user.id',
@@ -484,6 +485,7 @@ export class MentoringService {
           'profile.userId',
         ])
         .getOne();
+
       if (!reservation) {
         throw new NotFoundException(
           '예약 정보를 찾을 수 없거나 해당 멘토의 예약이 아닙니다.',
@@ -491,6 +493,9 @@ export class MentoringService {
       }
       if (reservation.status === MemtoringStatus.PROGRESS) {
         throw new BadRequestException('이미 처리된 예약입니다.');
+      }
+      if (reservation.status === MemtoringStatus.CANCELLED) {
+        throw new BadRequestException('이미 거절된 예약입니다.');
       }
       // 승인상태 업데이트
       await queryRunner.manager.update(
@@ -500,7 +505,7 @@ export class MentoringService {
           status: approved
             ? MemtoringStatus.PROGRESS
             : MemtoringStatus.CANCELLED,
-          reason: !approved ? reason : null,
+          reason: approved ? null : reason,
         },
       );
       //알람유형
@@ -516,18 +521,19 @@ export class MentoringService {
         {
           message: notiMessage,
           type: notiType,
-          userId: reservation.user.id,
+          senderId: reservation.programs.profile.userId, // 발신자
+          recipientId: reservation.user.id, // 수신자
           reservationId,
           programId: reservation.programs.id,
         },
         queryRunner.manager,
       );
+      await queryRunner.commitTransaction();
       // 트랜잭션 완료 후 실시간 알림 전송
       this.notificationGateway.sendNotificationToUser(
-        reservation.user.id,
+        reservation.user.id, // 수신자
         noti,
       );
-      await queryRunner.commitTransaction();
       return {
         message: approved
           ? '멘토링 승인이 완료되었습니다.'

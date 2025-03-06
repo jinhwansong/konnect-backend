@@ -5,7 +5,7 @@ export enum Status {
 }
 // 회원등급
 export enum UserRole {
-  USER = 'user',
+  MENTEE = 'mentee',
   MENTOR = 'mentor',
   ADMIN = 'admin',
 }

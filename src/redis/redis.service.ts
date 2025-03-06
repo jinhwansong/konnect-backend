@@ -19,7 +19,17 @@ export class RedisService {
   }
   // 세션키 데이터 캐싱
   async get(key: string) {
-    const data = await this.client.get(key);
+    const fullKey = key.startsWith('session:') ? key : `session:${key}`;
+    const decode = decodeURIComponent(fullKey);
+    let processdKey = decode;
+    if (decode.includes('.')) {
+      processdKey = decode.split('.')[0];
+    }
+    if (processdKey.includes('s:')) {
+      processdKey = processdKey.replace('s:', '');
+    }
+    const data = await this.client.get(processdKey);
+    if (!data) return null;
     return JSON.parse(data);
   }
   // 채팅 메시지 만료시간 설정 및 데이터 저장

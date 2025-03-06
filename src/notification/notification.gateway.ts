@@ -30,14 +30,12 @@ export class NotificationGateway
       const id = this.sessionId(client);
       // 세션아이디가 없다면
       if (!id) {
-        console.log('해당 id가 없습니다');
         client.disconnect();
         return;
       }
       // 아이디는 있는데 로그인을 안했다면.
       const sessionData = await this.redisService.get(id);
       if (!sessionData || !sessionData.passport.user) {
-        console.log('유효한 세션이 아니거나 사용자 정보가 없습니다.');
         client.disconnect();
         return;
       }
@@ -48,7 +46,6 @@ export class NotificationGateway
       // 업데이트된 소캣 아이디 저장
       this.userSocketMap.set(userId, userSockets);
       client.data.userId = userId;
-      console.log(`user ${userId} connected: ${client.id}`);
     } catch (error) {
       console.error('error 연결', error);
       // 연결해제
@@ -79,10 +76,9 @@ export class NotificationGateway
     return match ? match[1] : null;
   }
   // 알림 전송
-
   sendNotificationToUser(userId: number, noti: NotificationDto) {
     const userSocket = this.userSocketMap.get(userId);
-    if (userSocket || userSocket.length > 0) {
+    if (userSocket && userSocket.length > 0) {
       userSocket.forEach((socketId) => {
         this.server.to(socketId).emit('noti', noti);
       });

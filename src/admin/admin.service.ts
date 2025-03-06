@@ -9,6 +9,10 @@ import { Status, UserRole } from '../common/enum/status.enum';
 import { Mentors } from 'src/entities/Mentors';
 import { Users } from 'src/entities/Users';
 import { DataSource, Repository } from 'typeorm';
+import { Notification, NotificationType } from 'src/entities/Notification';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationGateway } from 'src/notification/notification.gateway';
+import { MentorProfile } from 'src/entities';
 
 @Injectable()
 export class AdminService {
@@ -17,10 +21,19 @@ export class AdminService {
     private readonly mentorRepository: Repository<Mentors>,
     @InjectRepository(Users)
     private readonly userRepository: Repository<Users>,
+    @InjectRepository(MentorProfile)
+    private readonly mentorProfileRepository: Repository<MentorProfile>,
+    private readonly notificationService: NotificationService,
+    private readonly notificationGateway: NotificationGateway,
     private readonly dataSource: DataSource,
   ) {}
   // 멘토 승인/거절
-  async approveMentor(id: number, approved: boolean, reason?: string) {
+  async approveMentor(
+    userId: number,
+    id: number,
+    approved: boolean,
+    reason?: string,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -53,7 +66,38 @@ export class AdminService {
           { role: UserRole.MENTOR },
         );
       }
+      // 알림 타입 결정
+      const notiType = approved
+        ? NotificationType.MENTOR_CONFIRMED
+        : NotificationType.MENTOR_REJECTED;
+
+      // 알림 메시지 결정
+      const message = approved
+        ? '멘토 신청이 승인되었습니다. 이제 멘토링 프로그램을 등록할 수 있습니다.'
+        : `멘토 신청이 거절되었습니다. 사유: ${reason || '사유가 제공되지 않았습니다.'}`;
+      if (approved) {
+        const profile = queryRunner.manager.create(MentorProfile, {
+          company: null,
+          introduce: null,
+          image: null,
+          position: null,
+          userId: Mentor.user.id,
+        });
+        queryRunner.manager.save(profile);
+      }
+      // 알림 생성
+      const noti = await queryRunner.manager.getRepository(Notification).save({
+        senderId: userId, // 관리자 ID (또는 시스템 ID)
+        recipientId: Mentor.user.id,
+        message,
+        type: notiType,
+        reservationId: null,
+        programId: null,
+        isRead: false,
+      });
       await queryRunner.commitTransaction();
+      // 트랜잭션 완료 후 실시간 알림 전송
+      this.notificationGateway.sendNotificationToUser(Mentor.user.id, noti);
       return {
         message: approved
           ? '멘토 승인이 완료되었습니다.'

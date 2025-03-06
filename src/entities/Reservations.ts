@@ -17,12 +17,13 @@ import { AvailableSchedule } from './AvailableSchedule';
 import { Contact } from './Contact';
 import {
   IsBoolean,
-  IsDate,
+  IsDateString,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { Notification } from './Notification';
+import { ChatRoom } from './ChatRoom';
 
 // 멘토링 현황
 export enum MemtoringStatus {
@@ -43,8 +44,7 @@ export class Reservations {
   @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
   id: number;
   // 예약된 시간
-  @IsDate()
-  @IsNotEmpty()
+  @IsDateString()
   @ApiProperty({
     example: '2022-01-01T09:00:00Z',
     description: '멘토링 시작 시간',
@@ -52,8 +52,8 @@ export class Reservations {
   @Column('datetime')
   startTime: Date;
   // 예약 종료된 시간
-  @IsDate()
   @IsNotEmpty()
+  @IsDateString()
   @ApiProperty({
     example: '2022-01-01 10:00:00Z',
     description: '멘토링 종료 시간',
@@ -79,6 +79,7 @@ export class Reservations {
     description: '승인 여부',
   })
   @IsBoolean()
+  @Column({ default: false })
   approved: boolean;
   // 거절사유
   @IsString()
@@ -89,7 +90,9 @@ export class Reservations {
     required: false,
   })
   @Column('text', { nullable: true })
-  reason: string | null;
+  reason?: string | null;
+  @Column({ default: false })
+  reminderSent: boolean;
   @Column()
   userId: number;
   @Column({ type: 'timestamp', nullable: true })
@@ -98,7 +101,6 @@ export class Reservations {
   scheduleId: number;
   @CreateDateColumn()
   createdAt: Date;
-
   @UpdateDateColumn()
   updatedAt: Date;
   // 결제 관계설정
@@ -122,4 +124,7 @@ export class Reservations {
     cascade: true,
   })
   contact: Contact;
+  // 채팅방 관계설정
+  @OneToOne(() => ChatRoom, (room) => room.reservations)
+  room: ChatRoom;
 }

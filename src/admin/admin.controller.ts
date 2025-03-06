@@ -22,6 +22,7 @@ import { UndefinedToNullInterceptor } from 'src/common/interceptors/undefinedToN
 import { AdminService } from './admin.service';
 import { UserDtoByPassword } from 'src/common/dto/user.dto';
 import { UserRole } from '../common/enum/status.enum';
+import { User } from 'src/common/decorators/user.decorator';
 
 @UseInterceptors(UndefinedToNullInterceptor)
 @ApiTags('관리자')
@@ -41,10 +42,16 @@ export class AdminController {
   @ApiOperation({ summary: '멘토 승인/거절' })
   @Post('approve/:id')
   async approveMentor(
+    @User() userId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: MentorApprovalDto,
   ) {
-    return this.adminService.approveMentor(id, body.approved, body.reason);
+    return this.adminService.approveMentor(
+      userId,
+      id,
+      body.approved,
+      body.reason,
+    );
   }
   @ApiResponse({
     status: 200,

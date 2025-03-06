@@ -120,18 +120,10 @@ export class MentorService {
         throw new BadRequestException('멘토 정보를 찾을 수 없습니다.');
       }
       // 프로필 조회
-      let profile = await this.mentorProfileRepository.findOne({
+      const profile = await this.mentorProfileRepository.findOne({
         where: { user: { id } },
         relations: ['user'],
       });
-      if (!profile) {
-        profile = await this.mentorProfileRepository.save({
-          company: null,
-          introduce: null,
-          image: null,
-          userId: id,
-        });
-      }
       return {
         career: mentor.career,
         introduce: profile.introduce,

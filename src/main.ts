@@ -50,9 +50,6 @@ async function bootstrap() {
         client: redisClient,
         prefix: 'session:', // 세션 키에 사용할 접두사
         ttl: 3600, // 1시간
-        disableTouch: true,
-        rolling: true,
-        enableOfflineQueue: false,
       }),
       cookie: {
         httpOnly: true,

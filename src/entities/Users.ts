@@ -25,6 +25,7 @@ import { Reservations } from './Reservations';
 import { MentorProfile } from './MentorProfile';
 import { Notification } from './Notification';
 import { Review } from './Review';
+import { ChatMember } from './ChatMember';
 
 @Entity({ schema: 'konnect', name: 'users' })
 export class Users {
@@ -119,20 +120,12 @@ export class Users {
   })
   @Column('varchar', { name: 'snsid', nullable: true, unique: true })
   snsId: string | null;
-  @ApiProperty({
-    example: 'eIpUVfeJRJiup-flJ5...',
-    description: 'Firebase Cloud Messaging 토큰',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Column({ nullable: true })
-  fcmToken: string;
   // 유저등급
   @ApiProperty({
-    example: 'user',
+    example: 'mentee',
     description: '유저등급',
   })
-  @Column('enum', { enum: UserRole, default: UserRole.USER })
+  @Column('enum', { enum: UserRole, default: UserRole.MENTEE })
   role: UserRole;
   @CreateDateColumn()
   createdAt: Date;
@@ -158,10 +151,15 @@ export class Users {
   // 예약과의 관계
   @OneToMany(() => Reservations, (reservations) => reservations.user)
   reservations: Reservations[];
-  // 승인과의 관계
-  @OneToMany(() => Notification, (reservations) => reservations.user)
-  notification: Notification[];
+  // 알림 발신자
+  @OneToMany(() => Notification, (noti) => noti.sender)
+  senderNotification: Notification[];
+  // 알림 수신자
+  @OneToMany(() => Notification, (noti) => noti.recipient)
+  recipientNotification: Notification[];
   // 리뷰과의 관계
   @OneToMany(() => Review, (review) => review.user)
   reviews: Review[];
+  @OneToMany(() => ChatMember, (member) => member.user)
+  chatmember: ChatMember[];
 }

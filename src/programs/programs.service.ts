@@ -43,6 +43,7 @@ export class ProgramsService {
           'profile.image',
           'mentor.career',
         ]);
+
       // 멘토링 분야 필터링
       if (mentoring_field && mentoring_field !== 'all') {
         program.andWhere('program.mentoring_field = :mentoring_field', {
@@ -86,12 +87,12 @@ export class ProgramsService {
           title: item.title,
           mentoring_field: item.mentoring_field,
           averageRating,
-          company: item.profile.company,
-          position: item.profile.position,
-          image: item.profile.image,
-          career: item.profile.user.mentor.career,
-          name: item.profile.user.name,
-          totalReviews: item.reviews ? item.reviews.length : 0,
+          company: item.profile.company || '',
+          position: item.profile.position || '',
+          image: item.profile.image || '',
+          career: item.profile.user.mentor.career || '',
+          name: item.profile.user.name || '',
+          totalReviews: item.reviews.length > 0 ? item.reviews.length : 0,
         };
       });
       return {

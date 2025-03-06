@@ -1,6 +1,9 @@
 import {
   Controller,
+  Delete,
   Get,
+  Param,
+  ParseIntPipe,
   Patch,
   UseGuards,
   UseInterceptors,
@@ -18,12 +21,12 @@ import { GetNotificationDto } from './dto/notification.response.dto';
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
   @UseGuards(LoggedInGuard)
-  @ApiOperation({ summary: '사용자 알림 조회' })
   @ApiResponse({
     status: 200,
     description: '알림 조회가 완료됬습니다.',
     type: GetNotificationDto,
   })
+  @ApiOperation({ summary: '사용자 알림 조회' })
   @Get('')
   async findUserNoti(@User() user) {
     return this.notificationService.findUserNoti(user.id);
@@ -34,9 +37,9 @@ export class NotificationController {
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '알람 읽음 표시' })
-  @Patch('')
-  async markAsRead(@User() user, body: number) {
-    return this.notificationService.markAsRead(user.id, body);
+  @Patch(':id')
+  async markAsRead(@User() user, @Param('id', ParseIntPipe) id: number) {
+    return this.notificationService.markAsRead(user.id, id);
   }
   @ApiResponse({
     status: 200,
@@ -54,17 +57,17 @@ export class NotificationController {
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '알림 삭제' })
-  @Patch('')
-  async remove(@User() user, body: number) {
-    return this.notificationService.remove(user.id, body);
+  @Delete(':id')
+  async remove(@User() user, @Param('id', ParseIntPipe) id: number) {
+    return this.notificationService.remove(user.id, id);
   }
   @ApiResponse({
     status: 200,
     description: '모든 알림을 삭제했습니다.',
   })
   @UseGuards(LoggedInGuard)
-  @ApiOperation({ summary: '모든알람 읽음 표시' })
-  @Patch('')
+  @ApiOperation({ summary: '모든알람 삭제 표시' })
+  @Delete('')
   async removeAll(@User() user) {
     return this.notificationService.removeAll(user.id);
   }
