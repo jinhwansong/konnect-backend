@@ -71,14 +71,6 @@ export class Message {
   fileSize?: number;
 
   @ApiProperty({
-    example: [1, 2, 3],
-    description: '메시지를 읽은 사용자 ID 목록',
-    default: [],
-  })
-  @Prop({ default: [] })
-  readBy: number[];
-
-  @ApiProperty({
     example: false,
     description: '삭제 여부',
     default: false,

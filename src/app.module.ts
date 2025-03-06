@@ -20,6 +20,7 @@ import { NotificationController } from './notification/notification.controller';
 import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     MentoringModule,
     NotificationModule,
     ScheduleModule.forRoot(),
+    ChatModule,
   ],
   controllers: [AppController, NotificationController],
   providers: [AppService],

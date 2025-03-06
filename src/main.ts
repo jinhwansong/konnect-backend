@@ -64,6 +64,7 @@ async function bootstrap() {
   app.use(passport.session());
   // 업로드 폴더 생성
   createUploadFolder();
+  createUploadFolder('uploads/chat-files');
   // 이미지 정적 파일
   const uploadsPath = path.join(__dirname, '..', 'uploads');
   app.useStaticAssets(uploadsPath, { prefix: '/uploads' });

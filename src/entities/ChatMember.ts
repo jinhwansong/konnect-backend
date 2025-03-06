@@ -34,7 +34,7 @@ export class ChatMember {
   @Column({ default: false })
   isActive: boolean;
   @ApiProperty({
-    example: 'chat-123',
+    example: '1',
     description: '채팅방 ID',
   })
   @Column()

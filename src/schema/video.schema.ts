@@ -93,5 +93,5 @@ export class VideoCall {
   createdAt: Date;
   updatedAt: Date;
 }
-export const MessageSchema = SchemaFactory.createForClass(VideoCall);
-MessageSchema.index({ chatRoomId: 1, startedAt: -1 });
+export const VideoCallSchema = SchemaFactory.createForClass(VideoCall);
+VideoCallSchema.index({ chatRoomId: 1, startedAt: -1 });

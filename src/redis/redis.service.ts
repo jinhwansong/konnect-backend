@@ -43,6 +43,11 @@ export class RedisService {
     // 최근 100개 채팅 만 유지
     await this.client.ltrim(key, 0, 99);
   }
+  async getChatMessage(roomId: string, count: number = 50) {
+    const key = `chat:${roomId}`;
+    const message = await this.client.lrange(key, 0, count - 1);
+    return message.map((m) => JSON.parse(m));
+  }
   // 메모리 사용량 체크
   async memoryUsage() {
     const info = await this.client.info('memory');
