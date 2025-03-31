@@ -74,13 +74,6 @@ export class Reservations {
     default: MemtoringStatus.PENDING,
   })
   status: MemtoringStatus;
-  @ApiProperty({
-    example: true,
-    description: '승인 여부',
-  })
-  @IsBoolean()
-  @Column({ default: false })
-  approved: boolean;
   // 거절사유
   @IsString()
   @IsOptional()

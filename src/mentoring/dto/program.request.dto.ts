@@ -1,4 +1,5 @@
 import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger';
+import { IsBoolean } from 'class-validator';
 import { PaginationDto } from 'src/common/dto/page.dto';
 import { AvailableSchedule } from 'src/entities/AvailableSchedule';
 import { Contact } from 'src/entities/Contact';
@@ -55,7 +56,11 @@ export class ScheduleListDto extends PaginationDto {
   items: AskListDto[];
 }
 // 멘토링 승인/거절
-export class AskApprovDto extends PickType(Reservations, [
-  'approved',
-  'reason',
-]) {}
+export class AskApprovDto extends PickType(Reservations, ['reason']) {
+  @ApiProperty({
+    example: true,
+    description: '승인 여부',
+  })
+  @IsBoolean()
+  approved: boolean;
+}

@@ -4,6 +4,8 @@ import multer from 'multer';
 import path from 'path';
 import multerS3 from 'multer-s3';
 import dotenv from 'dotenv';
+import sharp from 'sharp';
+
 dotenv.config();
 export const multerImage = () => {
   if (process.env.NODE_ENV === 'production') {
@@ -19,14 +21,41 @@ export const multerImage = () => {
       storage: multerS3({
         s3: s3,
         bucket: process.env.AWS_BUCKET_NAME,
-        key: (req, file, cb) => {
-          const ext = path.extname(file.originalname);
-          cb(null, path.basename(file.originalname, ext) + Date.now() + ext);
+        //  Content-Type 헤더자동설정
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        acl: 'public-read',
+        shouldTransform: (req, file, cb) => {
+          cb(null, file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/));
         },
+        transform: [
+          {
+            id: 'webp',
+            key: (req, file, cb) => {
+              const ext = '.webp';
+              const name = path.extname(file.originalname);
+              const filename =
+                path.basename(file.originalname, name) +
+                Date.now() +
+                name +
+                ext;
+              cb(null, filename);
+            },
+            transform: (req, file, cb) => {
+              // 파일 확장자 변환
+              cb(
+                null,
+                sharp().webp({
+                  quality: req.body.quality ? parseInt(req.body.quality) : 80,
+                  lossless: false,
+                }),
+              );
+            },
+          },
+        ],
       }),
       limits: { fileSize: 2 * 1024 * 1024 }, // 각 파일 당 2mb
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
           cb(null, true);
         } else {
           cb(new BadRequestException('지원하지 않는 이미지 형식입니다'), false);
@@ -43,13 +72,18 @@ export const multerImage = () => {
         },
         // 파일명 조작
         filename(req, file, cb) {
-          const ext = path.extname(file.originalname);
-          cb(null, path.basename(file.originalname, ext) + Date.now() + ext);
+          const name = path.extname(file.originalname);
+          const filename =
+            path.basename(file.originalname, name) +
+            Date.now() +
+            name +
+            '.webp';
+          cb(null, filename);
         },
       }),
       limits: { fileSize: 2 * 1024 * 1024 }, // 각 파일 당 2mb
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
           cb(null, true);
         } else {
           cb(new BadRequestException('지원하지 않는 이미지 형식입니다'), false);

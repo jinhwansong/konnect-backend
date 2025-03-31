@@ -33,6 +33,7 @@ import { GoogleAuthGuard } from 'src/auth/google-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerImage } from 'src/common/utils/multer.options';
 import { RedisService } from 'src/redis/redis.service';
+import { WebpTransformInterceptor } from 'src/common/interceptors/webpTransform.Interceptor';
 
 @UseInterceptors(UndefinedToNullInterceptor)
 @ApiTags('유저정보')
@@ -267,7 +268,10 @@ export class UsersController {
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '프로필이미지 변경' })
-  @UseInterceptors(FileInterceptor('image', multerImage()))
+  @UseInterceptors(
+    FileInterceptor('image', multerImage()),
+    WebpTransformInterceptor,
+  )
   @Patch('profile')
   profile(@UploadedFile() file: Express.Multer.File, @User() user) {
     return this.userService.updateProfile(file, user.id);

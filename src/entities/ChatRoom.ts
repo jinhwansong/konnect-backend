@@ -11,7 +11,7 @@ import {
 import { ChatMember } from './ChatMember';
 import { ApiProperty } from '@nestjs/swagger';
 import { Reservations } from './Reservations';
-import { IsBoolean, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 @Entity({ schema: 'konnect', name: 'chatroom' })
 export class ChatRoom {
@@ -32,14 +32,7 @@ export class ChatRoom {
   @IsNotEmpty()
   @IsNumber()
   @Column()
-  reservationId: number;
-  @ApiProperty({
-    example: true,
-    description: '채팅방 활성화 여부',
-    default: true,
-  })
-  @IsBoolean()
-  isActive: boolean;
+  chatRoomId: number;
   @CreateDateColumn()
   createdAt: Date;
 

@@ -11,3 +11,5 @@ export { AvailableSchedule } from './AvailableSchedule';
 export { Contact } from './Contact';
 export { Review } from './Review';
 export { Notification } from './Notification';
+export { ChatMember } from './ChatMember';
+export { ChatRoom } from './ChatRoom';

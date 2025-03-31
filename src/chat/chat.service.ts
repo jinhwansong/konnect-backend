@@ -16,13 +16,12 @@ import { UserRole } from 'src/common/enum/status.enum';
 import { InjectModel } from '@nestjs/mongoose';
 import { Message, MessageDocument } from 'src/schema/message.schema';
 import { Model } from 'mongoose';
-import { ChatGateway } from './chat.gateway';
 
 @Injectable()
 export class ChatService {
   constructor(
     @InjectRepository(ChatMember)
-    private readonly chatMenberRepository: Repository<ChatMember>,
+    private readonly chatMemberRepository: Repository<ChatMember>,
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepository: Repository<ChatRoom>,
     @InjectRepository(Users)
@@ -31,7 +30,6 @@ export class ChatService {
     private reservationsRepository: Repository<Reservations>,
     @InjectModel(Message.name)
     private messageModel: Model<MessageDocument>,
-    private chatGateway: ChatGateway,
     private readonly redisService: RedisService,
     private readonly dataSource: DataSource,
   ) {}
@@ -43,7 +41,7 @@ export class ChatService {
     await queryRunner.startTransaction();
     try {
       const reservations = await this.reservationsRepository.findOne({
-        where: { id: body.reservationId, status: MemtoringStatus.PROGRESS },
+        where: { id: body.chatRoomId, status: MemtoringStatus.PROGRESS },
         relations: [
           'user',
           'programs',
@@ -62,43 +60,39 @@ export class ChatService {
       }
       // 예약한 방 존재여부
       const exChatRoom = await this.chatRoomRepository.findOne({
-        where: { reservationId: body.reservationId, isActive: true },
-        relations: ['chatmember'],
+        where: { chatRoomId: body.chatRoomId },
+        relations: ['chatmember', 'chatmember.user'],
       });
       if (exChatRoom) {
         const isMenber = exChatRoom.chatmember.some(
-          (member) => member.user.id === userId,
+          (member) => member.user?.id === userId,
         );
         if (isMenber) {
-          return exChatRoom;
+          return {
+            message: '채팅방이 생성되었습니다.',
+            chatRoomId: reservations.id,
+          };
         }
       }
-      const date = new Date();
-      const title = `${date.getDate} ${reservations.programs.title} 멘토링 방`;
       // 채팅방 생성
       const chatRoom = queryRunner.manager.create(ChatRoom, {
-        isActive: true,
-        reservationId: body.reservationId,
-        name: title,
+        chatRoomId: body.chatRoomId,
+        name: `${reservations.programs.title} 멘토링 방`,
       });
       const savedChatRoom = await queryRunner.manager.save(chatRoom);
       // 멘토 멤버 생성
-      const mentorMember = queryRunner.manager.create(ChatMember, {
-        role: UserRole.MENTOR,
+      const member = queryRunner.manager.create(ChatMember, {
+        role: userId === mentor ? UserRole.MENTOR : UserRole.MENTEE,
         isActive: true,
         chatRoomId: savedChatRoom.id.toString(),
         userId: mentor,
       });
-      // 멘토 멤버 생성
-      const menteeMember = queryRunner.manager.create(ChatMember, {
-        role: UserRole.MENTEE,
-        isActive: true,
-        chatRoomId: savedChatRoom.id.toString(),
-        userId: mentee,
-      });
-      await queryRunner.manager.save([mentorMember, menteeMember]);
+      await queryRunner.manager.save(member);
       await queryRunner.commitTransaction();
-      return { message: '채팅방이 생성되었습니다.', id: savedChatRoom.id };
+      return {
+        message: '채팅방이 생성되었습니다.',
+        chatRoomId: reservations.id,
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -107,9 +101,9 @@ export class ChatService {
     }
   }
   // 새 채팅방 입장
-  async getRoom(userId: number, reservationId: number) {
+  async getRoom(userId: number, chatRoomId: number) {
     const reservations = await this.reservationsRepository.findOne({
-      where: { id: reservationId, status: MemtoringStatus.PROGRESS },
+      where: { id: chatRoomId, status: MemtoringStatus.PROGRESS },
       relations: [
         'user',
         'programs',
@@ -126,77 +120,68 @@ export class ChatService {
     if (mentor !== userId && mentee !== userId) {
       throw new ForbiddenException('채팅방 접근 권한이 없습니다.');
     }
+    // 사용자 역할
+    const roles = userId === mentor ? UserRole.MENTOR : UserRole.MENTEE;
     // 채팅방 조회
-    const chatRoom = await this.chatRoomRepository.findOne({
-      where: { reservationId, isActive: true },
-      relations: ['chatmember', 'chatmember.user'],
+    let chatRoom = await this.chatRoomRepository.findOne({
+      where: { chatRoomId },
+      relations: ['chatmember', 'chatmember.user', 'chatmember.room'],
     });
     if (!chatRoom) {
       throw new NotFoundException('채팅방을 찾을 수 없습니다.');
     }
-    const data = chatRoom.chatmember.map((item) => ({
-      id: item.user.id,
-      name: item.user.name,
-      role: item.role,
-      image: item.user.image,
-    }));
-    return { message: '채팅방이 생성되었습니다.', data };
-  }
-  // 메시지 전송
-  async sendMessage(
-    userId: number,
-    roomId: string,
-    content: string,
-    type: string = 'TEXT',
-    fileInfo?: any,
-  ) {
-    // 접근 권한 확인
-    const member = await this.chatMenberRepository.findOne({
-      where: { chatRoomId: roomId, userId, isActive: true },
-    });
-    if (!member) {
-      throw new ForbiddenException('채팅방 접근 권한이 없습니다.');
+    // 현재 입장한 멤버 확인
+    const exMember = chatRoom.chatmember.find(
+      (member) => member.user.id === userId,
+    );
+    // 새로 입장한 사용자 추가
+    if (!exMember) {
+      const member = this.chatMemberRepository.create({
+        role: roles,
+        isActive: true,
+        chatRoomId: chatRoom.id.toString(),
+        userId: userId,
+      });
+      await this.chatMemberRepository.save(member);
+      // 다시 조회
+      chatRoom = await this.chatRoomRepository.findOne({
+        where: { chatRoomId },
+        relations: ['chatmember', 'chatmember.user', 'chatmember.room'],
+      });
+    } else {
+      // 이미 들어온 사람은 활성 상태 업데이트
+      exMember.isActive = true;
+      await this.chatMemberRepository.save(exMember);
     }
-    // 메시지 저장
-    const message: any = {
-      chatRoomId: roomId,
-      senderId: userId,
-      content,
-      senderName: member.user.name,
-      type,
-      createdAt: new Date(),
+    // 입장한 사용자 데이터 필터링
+    const mentors = chatRoom.chatmember
+      .filter((item) => item.user.id === mentor)
+      .map((items) => ({
+        id: items.user.id,
+        name: items.user.name,
+        role: items.role,
+        isActive: items.isActive,
+        image: items.user.image,
+      }));
+    const mentees = chatRoom.chatmember
+      .filter((item) => item.user.id === mentee)
+      .map((items) => ({
+        id: items.user.id,
+        name: items.user.name,
+        role: items.role,
+        isActive: items.isActive,
+        image: items.user.image,
+      }));
+    return {
+      message: '채팅방이 생성되었습니다.',
+      mentors: mentors[0],
+      roomInfo: {
+        id: chatRoom.id,
+        roomTitle: chatRoom.name,
+        createRoom: chatRoom.createdAt,
+      },
+      mentees: mentees,
     };
-    // 파일 업로드시
-    if (fileInfo && type !== 'text') {
-      message.fileUrl = fileInfo.url;
-      message.fileName = fileInfo.filename;
-      message.fileSize = fileInfo.size;
-    }
-    // 몽고디비에 저장
-    const newMessage = new this.messageModel(message);
-    const savedMessage = await newMessage.save();
-    // 레디스에 업데이트
-    await this.redisService.saveChatMassage(roomId, {
-      _id: savedMessage._id,
-      senderId: userId,
-      senderName: member.user.name,
-      content,
-      type,
-      fileUrl: message.fileUrl,
-      fileName: message.fileName,
-      createdAt: savedMessage.createdAt,
-    });
-    this.chatGateway.sendMessageToRoom(roomId, {
-      _id: savedMessage._id.toString(),
-      senderId: userId,
-      senderName: member.user.name,
-      content,
-      type,
-      fileUrl: message.fileUrl,
-      fileName: message.fileName,
-      createdAt: savedMessage.createdAt,
-    });
-    return savedMessage;
   }
   // 메시지 조회
   async getMessage(
@@ -205,7 +190,7 @@ export class ChatService {
     options: { limit?: number; before?: string } = {},
   ) {
     // 채팅방 접근 권한 확인
-    const member = await this.chatMenberRepository.findOne({
+    const member = await this.chatMemberRepository.findOne({
       where: { chatRoomId: roomId, userId, isActive: true },
     });
 

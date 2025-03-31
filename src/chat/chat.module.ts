@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Message, MessageSchema } from 'src/schema/message.schema';
 import { VideoCall, VideoCallSchema } from 'src/schema/video.schema';
 import { ChatGateway } from './chat.gateway';
+import { RedisService } from 'src/redis/redis.service';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { ChatGateway } from './chat.gateway';
     ]),
   ],
   controllers: [ChatController],
-  providers: [ChatService, ChatGateway],
+  providers: [ChatService, ChatGateway, RedisService],
 })
 export class ChatModule {}

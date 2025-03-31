@@ -31,6 +31,7 @@ import {
 } from './dto/update.profile.dto';
 import { MentorRequestDto } from './dto/mentor.request.dto';
 import { multerImage } from 'src/common/utils/multer.options';
+import { WebpTransformInterceptor } from 'src/common/interceptors/webpTransform.Interceptor';
 
 @UseInterceptors(UndefinedToNullInterceptor)
 @ApiTags('멘토')
@@ -108,7 +109,10 @@ export class MentorController {
   })
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '프로필이미지 변경' })
-  @UseInterceptors(FileInterceptor('image', multerImage()))
+  @UseInterceptors(
+    FileInterceptor('image', multerImage()),
+    WebpTransformInterceptor,
+  )
   @Patch('profile')
   profile(@UploadedFile() file: Express.Multer.File, @User() user) {
     return this.MentorService.updateProfile(file, user.id);
@@ -183,7 +187,10 @@ export class MentorController {
   @UseGuards(LoggedInGuard)
   @ApiOperation({ summary: '이미지 변경' })
   @Post('images')
-  @UseInterceptors(FilesInterceptor('images[]', 10, multerImage()))
+  @UseInterceptors(
+    FilesInterceptor('images[]', 10, multerImage()),
+    WebpTransformInterceptor,
+  )
   uploadImage(
     @UploadedFiles() files: Array<Express.Multer.File>,
     @User() user,

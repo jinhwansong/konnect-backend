@@ -32,6 +32,12 @@ export class Message {
   @Prop({ required: true })
   senderId: number;
   @ApiProperty({
+    example: '발신자',
+    description: '발신자 이름',
+  })
+  @Prop()
+  senderName: string;
+  @ApiProperty({
     example: '안녕하세요! 멘토링 일정은 언제가 좋을까요?',
     description: '메시지 내용',
   })

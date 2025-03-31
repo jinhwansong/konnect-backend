@@ -1,3 +1,5 @@
+import { ForbiddenException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -7,6 +9,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RedisService } from 'src/redis/redis.service';
+import { Message, MessageDocument } from 'src/schema/message.schema';
+import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ChatMember } from 'src/entities';
+import { Repository } from 'typeorm';
 
 @WebSocketGateway({
   cors: {
@@ -16,7 +23,13 @@ import { RedisService } from 'src/redis/redis.service';
   namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    @InjectRepository(ChatMember)
+    private readonly chatMemberRepository: Repository<ChatMember>,
+    @InjectModel(Message.name)
+    private messageModel: Model<MessageDocument>,
+    private readonly redisService: RedisService,
+  ) {}
   // 같은 아이디로 여러 기기에서 접속시
   private userSocketMap = new Map<number, string[]>();
   // 채팅방 관리
@@ -84,20 +97,64 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // 메시지 전송
   @SubscribeMessage('sendMessage')
   async handleMessage(client: Socket, payload: any) {
-    const userId = this.chatSocketMap.get(client.id);
+    const userId = client.data.userId;
     if (!userId || !payload.roomId || !payload.content) return;
-    // 메시지 임시저장
-    await this.redisService.saveChatMassage(payload.roomId, {
-      ...payload,
-      senderId: userId,
-      timestamp: new Date(),
-    });
-    // 채팅창에 메시지 전송
-    this.sendMessageToRoom(payload.roomId, {
-      ...payload,
-      senderId: userId,
-      timestamp: new Date(),
-    });
+    try {
+      // 접근 권한 확인
+      const member = await this.chatMemberRepository.findOne({
+        where: { chatRoomId: payload.roomId, userId, isActive: true },
+        relations: ['user'],
+      });
+      if (!member) {
+        throw new ForbiddenException('채팅방 접근 권한이 없습니다.');
+      }
+      // 메시지 저장
+      const message: any = {
+        chatRoomId: payload.roomId,
+        senderId: userId,
+        content: payload.content,
+        senderName: member.user.name,
+        type: payload.type || 'TEXT',
+        createdAt: new Date(),
+      };
+      // 파일 업로드시
+      if (payload.fileInfo) {
+        message.fileUrl = payload.fileInfo.url;
+        message.fileName = payload.fileInfo.filename;
+        message.fileSize = payload.fileInfo.size;
+      }
+      // 몽고디비에 저장
+      const newMessage = new this.messageModel(message);
+      const savedMessage = await newMessage.save();
+      // 메시지 임시저장
+      await this.redisService.saveChatMassage(payload.roomId, {
+        _id: savedMessage._id,
+        senderId: userId,
+        senderName: member.user.name,
+        content: payload.content,
+        type: payload.type || 'TEXT',
+        fileUrl: message.fileUrl,
+        fileName: message.fileName,
+        createdAt: savedMessage.createdAt,
+      });
+      // 채팅창에 메시지 전송
+      this.sendMessageToRoom(payload.roomId, {
+        _id: savedMessage._id.toString(),
+        senderId: userId,
+        senderName: member.user.name,
+        content: payload.content,
+        type: payload.type || 'TEXT',
+        fileUrl: message.fileUrl,
+        fileName: message.fileName,
+        createdAt: savedMessage.createdAt,
+      });
+    } catch (error) {
+      this.sendMessageToRoom(payload.roomId, {
+        senderId: userId,
+        content: payload.content,
+        timestamp: new Date(),
+      });
+    }
   }
   sendMessageToRoom(roomId: string, message: any) {
     this.server.to(roomId).emit('newMessage', message);
@@ -105,7 +162,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // 타이핑 시작시
   @SubscribeMessage('startTyping')
   handleStartTyping(client: Socket, payload: { roomId: string }) {
-    const userId = this.chatSocketMap.get(client.id);
+    const userId = client.data.userId;
     if (!userId || !payload.roomId) return;
 
     client.to(payload.roomId).emit('userTyping', { userId });
@@ -113,9 +170,42 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // 타이핑 멈출시
   @SubscribeMessage('stopTyping')
   handleStopTyping(client: Socket, payload: { roomId: string }) {
-    const userId = this.chatSocketMap.get(client.id);
+    const userId = client.data.userId;
     if (!userId || !payload.roomId) return;
 
     client.to(payload.roomId).emit('userStoppedTyping', { userId });
+  }
+  // 채팅방 입장
+  @SubscribeMessage('joinRoom')
+  handleJoinRoom(client: Socket, payload: { roomId: string }) {
+    const userId = client.data.userId;
+    if (!userId || !payload.roomId) return;
+    // 혹시 다른방에 있다가 주소창으로 이동시 기존방 나가기
+    const prevRoom = this.chatSocketMap.get(client.id);
+    if (prevRoom) {
+      client.leave(prevRoom);
+    }
+    // 새 방 입장
+    client.join(payload.roomId);
+    this.chatSocketMap.set(client.id, payload.roomId);
+  }
+  // 채팅방 나가기
+  @SubscribeMessage('leaveRoom')
+  async handleLeaveRoom(client: Socket) {
+    const roomId = this.chatSocketMap.get(client.id);
+    const userId = client.data.userId;
+    if (roomId && userId) {
+      await this.chatMemberRepository.update(
+        { chatRoomId: roomId, userId },
+        { isActive: false },
+      );
+      client.leave(roomId);
+      this.chatSocketMap.delete(client.id);
+      // 퇴장 알림
+      client.to(roomId).emit('userleft', { userId });
+      // 업데이트된 참여자 목록 전송
+      // const activeMembers = await this.getActiveMembers(roomId);
+      // this.server.to(roomId).emit('updatedParticipants', activeMembers);
+    }
   }
 }

@@ -42,41 +42,10 @@ export class ChatController {
     type: ChatRoom,
   })
   @ApiOperation({ summary: '1:1 채팅방 입장' })
-  @Get(':roomId')
+  @Get(':chatRoomId')
   @UseGuards(LoggedInGuard)
-  getRoom(@User() user, @Param('id', ParseIntPipe) id: number) {
+  getRoom(@User() user, @Param('chatRoomId', ParseIntPipe) id: number) {
     return this.chatService.getRoom(user.id, id);
-  }
-  @ApiResponse({
-    status: 201,
-    description: '메시지 전송 성공',
-  })
-  @ApiOperation({ summary: '메시지 전송' })
-  @Post(':roomId/message')
-  @UseGuards(LoggedInGuard)
-  @UseInterceptors(FileInterceptor('file', multerFile()))
-  sendMessage(
-    @User() user,
-    @Param('roomId') roomId: string,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: SendMessageDto,
-  ) {
-    const fileUrl = getFileUrl(file);
-
-    const fileInfo = {
-      url: fileUrl,
-      name: file.originalname,
-      size: file.size,
-    };
-
-    const fileType = file.mimetype.startsWith('image/') ? 'image' : 'file';
-    return this.chatService.sendMessage(
-      user.id,
-      roomId,
-      body.content,
-      fileType,
-      fileInfo,
-    );
   }
   @ApiResponse({
     status: 200,
@@ -85,11 +54,11 @@ export class ChatController {
   @ApiOperation({ summary: '메시지 조회' })
   @ApiQuery({ name: 'limit', required: false, description: '조회할 메시지 수' })
   @ApiQuery({ name: 'before', required: false, description: '기준 메시지 id' })
-  @Get(':roomId/message')
+  @Get(':chatRoomId/message')
   @UseGuards(LoggedInGuard)
   getMessage(
     @User() user,
-    @Param('roomId') roomId: string,
+    @Param('chatRoomId') roomId: string,
     @Query('limit') limit?: number,
     @Query('before') before?: string,
   ) {
