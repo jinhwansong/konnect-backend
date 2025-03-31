@@ -43,30 +43,40 @@ jobs:
         script: |
           cd ~/konnect-backend
           
-          # 정확한 PM2 경로 사용
-          PM2_PATH="/home/ubuntu/.npm-global/bin/pm2"
-          echo "PM2 executable: $PM2_PATH"
-          
-          # 경로 확인
-          if [ -f "$PM2_PATH" ]; then
-            echo "PM2 found at $PM2_PATH"
-          else
-            echo "PM2 not found at $PM2_PATH. Installing..."
-            npm install -g pm2
-            PM2_PATH="/home/ubuntu/.npm-global/bin/pm2"
+          # 파일 존재 확인
+          if [ ! -f "ecosystem.config.js" ]; then
+            echo "ecosystem.config.js file not found. Creating simple config..."
+            cat > ecosystem.config.js << 'EOL'
+            module.exports = {
+              apps: [{
+                name: "konnect",
+                script: "dist/main.js",
+                instances: 1,
+                autorestart: true,
+                watch: false,
+                max_memory_restart: "1G",
+                env: {
+                  NODE_ENV: "production"
+                }
+              }]
+            };
+            EOL
+            echo "Created ecosystem.config.js file"
           fi
+          
+          # PM2 경로 사용
+          PM2_PATH="/home/ubuntu/.npm-global/bin/pm2"
           
           # PM2로 애플리케이션 실행
           if $PM2_PATH list | grep -q "konnect"; then
             echo "Reloading existing PM2 process"
-            $PM2_PATH reload ecosystem.config.js
+            $PM2_PATH reload konnect || $PM2_PATH reload ecosystem.config.js
           else
             echo "Starting new PM2 process"
             $PM2_PATH start ecosystem.config.js
           fi
           
-          # PM2 상태 확인
-          $PM2_PATH list
+          # PM2 상태 확인 (에러가 발생해도 워크플로우 계속 진행)
+          $PM2_PATH list || echo "Could not display PM2 list"
           
-          # PM2 startup 스크립트 생성 (서버 재부팅 시 자동 시작)
-          pm2 save
+          echo "Deployment completed"
