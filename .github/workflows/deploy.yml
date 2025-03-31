@@ -46,8 +46,7 @@ jobs:
           # 파일 존재 확인
           if [ ! -f "ecosystem.config.js" ]; then
             echo "ecosystem.config.js file not found. Creating simple config..."
-            cat > ecosystem.config.js << 'EOL'
-            module.exports = {
+            echo 'module.exports = {
               apps: [{
                 name: "konnect",
                 script: "dist/main.js",
@@ -59,8 +58,7 @@ jobs:
                   NODE_ENV: "production"
                 }
               }]
-            };
-            EOL
+            };' > ecosystem.config.js
             echo "Created ecosystem.config.js file"
           fi
           
@@ -76,7 +74,5 @@ jobs:
             $PM2_PATH start ecosystem.config.js
           fi
           
-          # PM2 상태 확인 (에러가 발생해도 워크플로우 계속 진행)
-          $PM2_PATH list || echo "Could not display PM2 list"
-          
+          # 배포 완료 메시지
           echo "Deployment completed"
