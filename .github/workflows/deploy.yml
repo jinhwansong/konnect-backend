@@ -41,25 +41,25 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          export PATH=$PATH:/usr/bin:/usr/local/bin:$HOME/.npm-global/bin:$HOME/node_modules/.bin
           cd ~/konnect-backend
-          echo "Current directory: $(pwd)"
-          echo "PATH: $PATH"
-          echo "Node version: $(node -v)"
-          echo "NPM version: $(npm -v)"
-          echo "PM2 version: $(pm2 -v || echo 'PM2 not found')"
           
-          # PM2로 애플리케이션 재시작
-          if pm2 list | grep -q "konnect"; then
+          # 환경 설정 디버깅
+          echo "Current directory: $(pwd)"
+          echo "Node executable: $(which node || echo 'not found')"
+          echo "NPM executable: $(which npm || echo 'not found')"
+          echo "PM2 executable: $(which pm2 || echo 'not found')"
+          
+          # 절대 경로 사용
+          if /usr/bin/pm2 list | grep -q "konnect"; then
             echo "Reloading existing PM2 process"
-            pm2 reload ecosystem.config.js
+            /usr/bin/pm2 reload ecosystem.config.js
           else
             echo "Starting new PM2 process"
-            pm2 start ecosystem.config.js
+            /usr/bin/pm2 start ecosystem.config.js
           fi
           
           # PM2 상태 확인
-          pm2 list
+          /usr/bin/pm2 list
           
           # PM2 startup 스크립트 생성 (서버 재부팅 시 자동 시작)
           pm2 save
