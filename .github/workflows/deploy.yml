@@ -2,7 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]  # 또는 master, develop 등 원하는 브랜치로 변경
+    branches: [ main ]  # 필요에 따라 브랜치명 변경
 
 jobs:
   deploy:
@@ -21,7 +21,7 @@ jobs:
     - name: Install Dependencies
       run: npm ci
     
-    - name: Build Application
+    - name: Build Application (로컬 빌드)
       run: npm run build
     
     - name: Copy files to EC2
@@ -30,11 +30,14 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        source: "dist/,node_modules/,package.json,package-lock.json,ecosystem.config.js,.env"
+        # 모든 필요한 파일과 디렉토리 포함
+        source: "dist/,node_modules/,src/,package.json,package-lock.json,ecosystem.config.js,.env,dataSource.ts,tsconfig.json,nest-cli.json"
         target: "~/konnect-backend"
         strip_components: 0
+        # 기존 파일 덮어쓰기
+        overwrite: true
     
-    - name: Restart Application
+    - name: Deploy and Restart Application
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -43,29 +46,16 @@ jobs:
         script: |
           cd ~/konnect-backend
           
-          # 파일 존재 확인
-          if [ ! -f "ecosystem.config.js" ]; then
-            echo "ecosystem.config.js file not found. Creating simple config..."
-            echo 'module.exports = {
-              apps: [{
-                name: "konnect",
-                script: "dist/main.js",
-                instances: 1,
-                autorestart: true,
-                watch: false,
-                max_memory_restart: "1G",
-                env: {
-                  NODE_ENV: "production"
-                }
-              }]
-            };' > ecosystem.config.js
-            echo "Created ecosystem.config.js file"
-          fi
+          # 환경 설정
+          export PATH=$PATH:$HOME/.npm-global/bin
           
-          # PM2 경로 사용
+          # 애플리케이션 다시 빌드
+          npm run build
+          
+          # PM2 경로 설정
           PM2_PATH="/home/ubuntu/.npm-global/bin/pm2"
           
-          # PM2로 애플리케이션 실행
+          # PM2로 애플리케이션 재시작
           if $PM2_PATH list | grep -q "konnect"; then
             echo "Reloading existing PM2 process"
             $PM2_PATH reload konnect || $PM2_PATH reload ecosystem.config.js
@@ -75,4 +65,4 @@ jobs:
           fi
           
           # 배포 완료 메시지
-          echo "Deployment completed"
+          echo "Deployment completed successfully"
