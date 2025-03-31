@@ -1,8 +1,8 @@
-# name: Deploy to EC2
+name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # 또는 master, develop 등 원하는 브랜치로 변경
 
 jobs:
   deploy:
@@ -12,15 +12,27 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v3
     
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install Dependencies
+      run: npm ci
+    
+    - name: Build Application
+      run: npm run build
+    
     - name: Copy files to EC2
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        source: '.'
-        target: '~/konnect-backend'  # 다시 konnect-backend 디렉토리로 변경
-        overwrite: true
+        source: "dist/,node_modules/,package.json,package-lock.json,ecosystem.config.js,.env"
+        target: "~/konnect-backend"
+        strip_components: 0
     
     - name: Restart Application
       uses: appleboy/ssh-action@master
@@ -29,8 +41,25 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          mkdir -p ~/konnect-backend  # konnect-backend 디렉토리 생성
+          export PATH=$PATH:/usr/bin:/usr/local/bin:$HOME/.npm-global/bin:$HOME/node_modules/.bin
           cd ~/konnect-backend
-          npm install
-          pm2 delete app || true
-          pm2 start npm --name "app" -- start
+          echo "Current directory: $(pwd)"
+          echo "PATH: $PATH"
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "PM2 version: $(pm2 -v || echo 'PM2 not found')"
+          
+          # PM2로 애플리케이션 재시작
+          if pm2 list | grep -q "konnect"; then
+            echo "Reloading existing PM2 process"
+            pm2 reload ecosystem.config.js
+          else
+            echo "Starting new PM2 process"
+            pm2 start ecosystem.config.js
+          fi
+          
+          # PM2 상태 확인
+          pm2 list
+          
+          # PM2 startup 스크립트 생성 (서버 재부팅 시 자동 시작)
+          pm2 save
