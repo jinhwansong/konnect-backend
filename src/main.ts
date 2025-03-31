@@ -18,7 +18,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGINS || 'http://localhost:3000',
     credentials: true,
   });
   // 레디스 클라이언트 생성
