@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Strategy } from 'passport-naver-v2';
 import { PassportStrategy } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { SocialLoginProvider } from 'src/common/enum/status.enum';
+import { SocialLoginProvider } from '@/common/enum/status.enum';
 
 @Injectable()
 export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
@@ -24,7 +24,6 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
     done: CallableFunction,
   ) {
     const { _json } = profile;
-    console.log('_json', _json);
     const naverUser = {
       snsId: _json.response.email,
       nickname: _json.response.nickname,
