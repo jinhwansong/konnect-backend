@@ -53,7 +53,6 @@ import { ChatModule } from './chat/chat.module';
         connectionLimit: 10, // 동시 연결 수 제한
         enableKeepAlive: true, // TCP Keep-Alive 활성화
         keepAliveInitialDelay: 30000, // Keep-Alive 초기 지연 시간 (ms)
-        keepConnectionAlive: true,
       },
     }),
     // 몽고디비

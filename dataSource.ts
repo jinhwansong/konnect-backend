@@ -26,7 +26,6 @@ const dataSource = new DataSource({
     connectTimeout: 60000, // 연결 시도 제한 시간 (ms)
     enableKeepAlive: true, // TCP Keep-Alive 활성화
     keepAliveInitialDelay: 30000, // Keep-Alive 초기 지연 시간 (ms)
-    keepConnectionAlive: true,
   },
 });
 
