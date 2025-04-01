@@ -13,9 +13,11 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
+    console.log('카카오', req);
     try {
       // kakao 인증 시도
       const result = (await super.canActivate(context)) as boolean;
+      console.log('카카오 인증시도', result);
       // 인증 성공 시 세션에 저장
       if (result) {
         await super.logIn(req); // 세션에 저장

@@ -53,9 +53,10 @@ async function bootstrap() {
       }),
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         maxAge: 3600000,
-        sameSite: 'lax',
+        sameSite: 'none',
+        domain: '.konee.shop',
       },
     }),
   );
