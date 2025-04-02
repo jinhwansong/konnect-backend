@@ -5,24 +5,20 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class LocalAuthGuard extends AuthGuard('local') {
+  constructor(private readonly authService: AuthService) {
+    super();
+  }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
-      const can = await super.canActivate(context);
-      if (can) {
+      const result = (await super.canActivate(context)) as boolean;
+      if (result) {
         const request = context.switchToHttp().getRequest();
-
-        // 로그인 실행
+        console.log();
         await super.logIn(request);
-
-        // 세션 쿠키 설정 (간단 버전)
-        if (request.session && process.env.NODE_ENV === 'production') {
-          request.session.cookie.domain = '.konee.shop';
-          request.session.cookie.secure = true;
-          request.session.cookie.sameSite = 'none';
-        }
       }
       return true;
     } catch (error) {

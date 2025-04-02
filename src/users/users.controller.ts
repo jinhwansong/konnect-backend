@@ -118,6 +118,7 @@ export class UsersController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   logIn(@User() user) {
+    console.log('유저 데이터', user);
     return user;
   }
   @ApiResponse({
