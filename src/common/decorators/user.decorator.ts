@@ -4,8 +4,6 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 export const User = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
-    console.log('세션 정보:', request.session);
-    console.log('인증 상태:', request.isAuthenticated());
     return request.user;
   },
 );

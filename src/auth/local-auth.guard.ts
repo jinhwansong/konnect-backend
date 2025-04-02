@@ -13,6 +13,7 @@ export class LocalAuthGuard extends AuthGuard('local') {
       const can = await super.canActivate(context);
       if (can) {
         const request = context.switchToHttp().getRequest();
+        // request.session.cookie.domain = '.konee.shop';
         await super.logIn(request);
       }
       return true;
