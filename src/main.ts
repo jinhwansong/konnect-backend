@@ -21,7 +21,7 @@ async function bootstrap() {
     origin: ['http://localhost:3000', process.env.CLIENT],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie', 'Cookie'],
   });
   // 레디스 클라이언트 생성
   let redisClient;
@@ -48,6 +48,8 @@ async function bootstrap() {
       // 데이터 없는 세션 저장 x
       saveUninitialized: false,
       secret: process.env.COOKIE_SECRET,
+      rolling: true,
+      name: 'connect.sid',
       store: new RedisStore({
         client: redisClient,
         prefix: 'session:', // 세션 키에 사용할 접두사

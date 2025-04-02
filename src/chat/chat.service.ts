@@ -5,17 +5,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Reservations, Users } from 'src/entities';
-import { ChatMember } from 'src/entities/ChatMember';
-import { ChatRoom } from 'src/entities/ChatRoom';
 import { RedisService } from 'src/redis/redis.service';
 import { DataSource, Repository } from 'typeorm';
 import { CreateRoomDTO } from './dto/chat.request.dto';
-import { MemtoringStatus } from 'src/entities/Reservations';
-import { UserRole } from 'src/common/enum/status.enum';
+import { MemtoringStatus, Reservations } from 'src/entities/Reservations';
+import { UserRole } from '../common/enum/status.enum';
 import { InjectModel } from '@nestjs/mongoose';
 import { Message, MessageDocument } from 'src/schema/message.schema';
 import { Model } from 'mongoose';
+import { ChatMember, ChatRoom, Users } from 'src/entities';
 
 @Injectable()
 export class ChatService {

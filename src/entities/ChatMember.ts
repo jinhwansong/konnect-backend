@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from 'src/common/enum/status.enum';
+import { UserRole } from '../common/enum/status.enum';
 import { Users } from './Users';
 import { ChatRoom } from './ChatRoom';
 

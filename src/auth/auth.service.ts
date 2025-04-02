@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
-import { Users } from 'src/entities/Users';
+import { Users } from '../entities/Users';
 import { DataSource, Repository } from 'typeorm';
 import { SnsJoinRequestDto } from 'src/users/dto/join.request.dto';
 

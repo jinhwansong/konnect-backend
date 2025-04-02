@@ -12,7 +12,7 @@ import { RedisService } from 'src/redis/redis.service';
 import { Message, MessageDocument } from 'src/schema/message.schema';
 import { Model } from 'mongoose';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChatMember } from 'src/entities';
+import { ChatMember } from '../entities';
 import { Repository } from 'typeorm';
 
 @WebSocketGateway({

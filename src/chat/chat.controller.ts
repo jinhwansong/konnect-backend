@@ -6,19 +6,16 @@ import {
   ParseIntPipe,
   Post,
   Query,
-  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UndefinedToNullInterceptor } from 'src/common/interceptors/undefinedToNull.Interceptor';
+import { UndefinedToNullInterceptor } from '../common/interceptors/undefinedToNull.Interceptor';
 import { ChatService } from './chat.service';
-import { ChatRoom } from 'src/entities/ChatRoom';
-import { CreateRoomDTO, SendMessageDto } from './dto/chat.request.dto';
-import { User } from 'src/common/decorators/user.decorator';
-import { LoggedInGuard } from 'src/auth/logged-in.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { getFileUrl, multerFile } from 'src/common/utils/file.options';
+import { ChatRoom } from '../entities/ChatRoom';
+import { CreateRoomDTO } from './dto/chat.request.dto';
+import { User } from '../common/decorators/user.decorator';
+import { LoggedInGuard } from '../auth/logged-in.guard';
 
 @UseInterceptors(UndefinedToNullInterceptor)
 @ApiTags('채팅')

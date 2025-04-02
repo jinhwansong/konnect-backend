@@ -4,15 +4,14 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginationDto } from 'src/common/dto/page.dto';
+import { PaginationDto } from '../common/dto/page.dto';
 import { Status, UserRole } from '../common/enum/status.enum';
-import { Mentors } from 'src/entities/Mentors';
-import { Users } from 'src/entities/Users';
+import { Mentors } from '../entities/Mentors';
 import { DataSource, Repository } from 'typeorm';
-import { Notification, NotificationType } from 'src/entities/Notification';
-import { NotificationService } from 'src/notification/notification.service';
-import { NotificationGateway } from 'src/notification/notification.gateway';
-import { MentorProfile } from 'src/entities';
+import { NotificationType } from '../entities/Notification';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGateway } from '../notification/notification.gateway';
+import { MentorProfile, Users, Notification } from '../entities';
 
 @Injectable()
 export class AdminService {

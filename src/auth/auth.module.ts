@@ -4,7 +4,7 @@ import { LocalStrategy } from './local.strategy';
 import { LocalSerializer } from './local.serializer';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Users } from 'src/entities/Users';
+import { Users } from '../entities';
 import { KakaoStrategy } from './kakao.strategy';
 import { GoogleStrategy } from './google.strategy';
 import { NaverStrategy } from './naver.strategy';
