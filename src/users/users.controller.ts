@@ -117,18 +117,7 @@ export class UsersController {
   @ApiOperation({ summary: '로그인' })
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async logIn(@User() user, @Req() req) {
-    // 세션 저장을 명시적으로 기다림
-    await new Promise<void>((resolve, reject) => {
-      req.session.save((err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-
+  logIn(@User() user) {
     return user;
   }
   @ApiResponse({
@@ -218,8 +207,7 @@ export class UsersController {
         res.clearCookie('connect.sid', {
           httpOnly: true,
           path: '/',
-          domain: '.konee.shop',
-          secure: process.env.NODE_ENV === 'production',
+          secure: false,
         });
         return res.status(200).send('로그아웃 하셨습니다');
       });
