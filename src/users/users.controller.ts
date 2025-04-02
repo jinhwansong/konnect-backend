@@ -137,7 +137,8 @@ export class UsersController {
   }
   @UseGuards(KakaoAuthGuard)
   @Get('auth/kakao/callback')
-  async kakaoCallback(@Res() res: Response) {
+  async kakaoCallback(@Req() req, @Res() res: Response) {
+    // 세션이 제대로 저장되었는지 확인
     return res.redirect(`${process.env.CLIENT}`);
   }
   @ApiResponse({

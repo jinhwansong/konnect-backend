@@ -18,7 +18,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: [process.env.CLIENT],
     credentials: true,
   });
   // 레디스 클라이언트 생성
@@ -53,10 +53,10 @@ async function bootstrap() {
       }),
       cookie: {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 3600000,
-        sameSite: 'none',
-        domain: '.konee.shop',
+        sameSite: 'lax',
+        domain: 'www.konee.shop',
       },
     }),
   );
