@@ -18,8 +18,10 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: [process.env.CLIENT],
+    origin: ['http://localhost:3000', process.env.CLIENT],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
   // 레디스 클라이언트 생성
   let redisClient;
@@ -37,7 +39,8 @@ async function bootstrap() {
       redisClient.quit();
     });
   }
-
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isLocalFrontend = process.env.CLIENT.includes('localhost');
   const RedisStore = connectRedis(session);
   app.use(
     session({
@@ -53,10 +56,10 @@ async function bootstrap() {
       }),
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction && !isLocalFrontend,
         maxAge: 3600000,
-        sameSite: 'lax',
-        domain: 'www.konee.shop',
+        sameSite: isLocalFrontend ? 'lax' : 'none',
+        domain: isProduction && !isLocalFrontend ? '.konee.shop' : undefined,
       },
     }),
   );
