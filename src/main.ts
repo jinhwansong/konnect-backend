@@ -39,9 +39,8 @@ async function bootstrap() {
       redisClient.quit();
     });
   }
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isLocalFrontend = process.env.CLIENT.includes('localhost');
   const RedisStore = connectRedis(session);
+  app.set('trust proxy', 1);
   app.use(
     session({
       // 매요청마다 저장 x
@@ -56,10 +55,11 @@ async function bootstrap() {
       }),
       cookie: {
         httpOnly: true,
-        secure: isProduction && !isLocalFrontend,
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 3600000,
-        sameSite: isLocalFrontend ? 'lax' : 'none',
-        domain: isProduction && !isLocalFrontend ? '.konee.shop' : undefined,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        domain:
+          process.env.NODE_ENV === 'production' ? '.konee.shop' : undefined,
       },
     }),
   );
