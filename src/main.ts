@@ -41,54 +41,28 @@ async function bootstrap() {
   }
   const RedisStore = connectRedis(session);
   app.set('trust proxy', 1);
-  if (process.env.NODE_ENV === 'production') {
-    // 운영 환경 세션 설정
-    app.use(
-      session({
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.COOKIE_SECRET,
-        rolling: true,
-        name: 'connect.sid',
-        store: new RedisStore({
-          client: redisClient,
-          prefix: 'session:',
-          ttl: 3600,
-        }),
-        cookie: {
-          httpOnly: true,
-          secure: true,
-          maxAge: 3600000,
-          sameSite: 'none',
-          domain: '.konee.shop', // 하드코딩
-          path: '/',
-        },
+  app.use(
+    session({
+      resave: false,
+      saveUninitialized: false,
+      secret: process.env.COOKIE_SECRET,
+      rolling: true,
+      name: 'connect.sid',
+      store: new RedisStore({
+        client: redisClient,
+        prefix: 'session:',
+        ttl: 3600,
       }),
-    );
-  } else {
-    // 개발 환경 세션 설정
-    app.use(
-      session({
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.COOKIE_SECRET,
-        rolling: true,
-        name: 'connect.sid',
-        store: new RedisStore({
-          client: redisClient,
-          prefix: 'session:',
-          ttl: 3600,
-        }),
-        cookie: {
-          httpOnly: true,
-          secure: false,
-          maxAge: 3600000,
-          sameSite: 'lax',
-          path: '/',
-        },
-      }),
-    );
-  }
+      cookie: {
+        httpOnly: true,
+        secure: false,
+        maxAge: 3600000,
+        sameSite: 'lax',
+        domain: '.konee.shop', // 하드코딩
+        path: '/',
+      },
+    }),
+  );
   app.use(cookieParser());
   app.use(passport.initialize());
   app.use(passport.session());
