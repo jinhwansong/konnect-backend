@@ -46,7 +46,6 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       secret: process.env.COOKIE_SECRET,
-      rolling: true,
       name: 'connect.sid',
       store: new RedisStore({
         client: redisClient,
@@ -55,9 +54,9 @@ async function bootstrap() {
       }),
       cookie: {
         httpOnly: true,
-        secure: false,
+        secure: true,
         maxAge: 3600000,
-        sameSite: 'lax',
+        sameSite: 'none',
         domain: '.konee.shop', // 하드코딩
         path: '/',
       },
