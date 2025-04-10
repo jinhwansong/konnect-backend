@@ -6,14 +6,17 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MentoringPrograms } from 'src/entities/MentoringPrograms';
 import { MemtoringStatus, Reservations } from 'src/entities/Reservations';
-import { Between, Not, Repository } from 'typeorm';
+import { Between, In, Not, Repository } from 'typeorm';
 import { ProgramRequestDto } from './dto/program.request';
+import { MentorProfile } from 'src/entities';
 
 @Injectable()
 export class ProgramsService {
   constructor(
     @InjectRepository(MentoringPrograms)
     private readonly mentorProgramRepository: Repository<MentoringPrograms>,
+    @InjectRepository(MentorProfile)
+    private readonly mentorProfileRepository: Repository<MentorProfile>,
     @InjectRepository(Reservations)
     private readonly reservationRepository: Repository<Reservations>,
   ) {}
@@ -36,6 +39,7 @@ export class ProgramsService {
           'program.title',
           'program.mentoring_field',
           'program.createdAt',
+          'program.profileId',
           'review.rating',
           'user.name',
           'profile.company',
@@ -73,6 +77,23 @@ export class ProgramsService {
           message: '검색 결과가 없습니다',
         };
       }
+      // 프로필 id 배열 올바르게 생성
+      const profileId = results
+        .filter((item) => item.profileId != null)
+        .map((item) => item.profileId);
+
+      const profileWithUsers =
+        profileId.length > 0
+          ? await this.mentorProfileRepository.find({
+              where: { id: In(profileId) },
+              relations: ['user', 'user.mentor'],
+            })
+          : [];
+      // 프로필 ID를 키로 한 맵 생성
+      const profileMap = new Map();
+      profileWithUsers.forEach((profile) => {
+        profileMap.set(profile.id, profile);
+      });
       const items = results.map((item) => {
         let averageRating = 0;
         if (item.reviews && item.reviews.length > 0) {
@@ -82,16 +103,20 @@ export class ProgramsService {
           );
           averageRating = sum / item.reviews.length;
         }
+        const profileWithUser = profileMap.get(item.profileId);
+        const name = profileWithUser?.user?.name || '';
+        const career = profileWithUser?.user?.mentor?.career || '';
+
         return {
           id: item.id,
           title: item.title,
           mentoring_field: item.mentoring_field,
           averageRating,
-          company: item.profile.company || '',
-          position: item.profile.position || '',
-          image: item.profile.image || '',
-          career: item.profile.user.mentor.career || '',
-          name: item.profile.user.name || '',
+          company: item.profile?.company || '',
+          position: item.profile?.position || '',
+          image: item.profile?.image || '',
+          career,
+          name,
           totalReviews: item.reviews.length > 0 ? item.reviews.length : 0,
         };
       });

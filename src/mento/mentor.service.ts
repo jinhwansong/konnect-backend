@@ -125,11 +125,11 @@ export class MentorService {
         relations: ['user'],
       });
       return {
-        career: mentor.career,
-        introduce: profile.introduce,
-        company: profile.company,
-        image: profile.image,
-        position: profile.position,
+        career: mentor.career || '',
+        introduce: profile.introduce || '',
+        company: profile.company || '',
+        image: profile.image || '',
+        position: profile.position || '',
       };
     } catch (error) {
       if (error instanceof BadRequestException) {

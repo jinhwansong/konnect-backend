@@ -32,38 +32,71 @@ export class WebpTransformInterceptor implements NestInterceptor {
       // 원본 파일 경로
       const originalPath = file.path;
 
-      // WebP 파일명 생성 (확장자가 이미 .webp인지 확인)
-      let webpPath = originalPath;
-      if (!originalPath.endsWith('.webp')) {
-        const ext = path.extname(originalPath);
-        const basePath = originalPath.substring(
-          0,
-          originalPath.length - ext.length,
-        );
-        webpPath = `${basePath}.webp`;
-      }
+      // 파일명과 확장자 분리
+      const parsedPath = path.parse(originalPath);
 
-      // 임시 파일로 WebP 변환 수행
-      const tempPath = `${webpPath}.tmp`;
+      // 원본 파일명에서 확장자를 제거
+      const nameWithoutExt = parsedPath.name.replace(
+        /\.(jpg|jpeg|png|gif)$/,
+        '',
+      );
+      console.log('확장자 제거', nameWithoutExt);
+      // WebP 파일 경로 생성
+      const webpPath = path.join(parsedPath.dir, `${nameWithoutExt}.webp`);
 
+      // 디버깅: 파일 경로 로깅
+      console.log('원본 경로:', originalPath);
+      console.log('변환 경로:', webpPath);
+
+      // WebP 변환 수행
       await sharp(originalPath)
         .webp({
           quality: 80,
           lossless: false,
         })
-        .toFile(tempPath);
+        .toFile(webpPath);
 
-      // 원본 파일 삭제 후 변환된 파일로 대체
-      fs.unlinkSync(originalPath);
-      fs.renameSync(tempPath, webpPath);
-
-      // 파일 객체 업데이트
+      // 파일 객체 업데이트 (원본 파일 삭제 전에 수행)
       file.filename = path.basename(webpPath);
       file.path = webpPath;
       file.mimetype = 'image/webp';
+
+      // 원본 확장자가 있다면 originalname도 업데이트
+      if (file.originalname) {
+        file.originalname = file.originalname.replace(
+          /\.(jpg|jpeg|png|gif)$/,
+          '.webp',
+        );
+      }
+
+      // 파일 핸들이 완전히 닫히도록 잠시 기다림
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // 원본 파일 삭제 시도 (오류 발생 시 무시)
+      try {
+        if (fs.existsSync(originalPath)) {
+          fs.unlinkSync(originalPath);
+          console.log('원본 파일 삭제 성공:', originalPath);
+        }
+      } catch (deleteError) {
+        console.warn(
+          '원본 파일 삭제 중 오류 (계속 진행):',
+          deleteError.message,
+        );
+        // 나중에 정리를 위해 삭제 실패한 파일 목록 기록 가능
+      }
+
+      // 디버깅: 최종 파일 정보 로깅
+      console.log('변환 완료. 파일 정보:', {
+        filename: file.filename,
+        path: file.path,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+      });
     } catch (error) {
       console.error('WebP 변환 중 오류 발생:', error);
-      // 변환에 실패하더라도 원본 파일은 유지
+      console.error(error.stack);
+      // 변환 실패 시 원본 파일을 그대로 사용
     }
 
     return next.handle();

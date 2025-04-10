@@ -20,7 +20,7 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:3000', process.env.CLIENT],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH '],
     allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie', 'Cookie'],
   });
   // 레디스 클라이언트 생성
@@ -40,12 +40,12 @@ async function bootstrap() {
     });
   }
   const RedisStore = connectRedis(session);
-  app.set('trust proxy', 1);
   app.use(
     session({
       resave: false,
       saveUninitialized: false,
       secret: process.env.COOKIE_SECRET,
+      rolling: true,
       name: 'connect.sid',
       store: new RedisStore({
         client: redisClient,
@@ -54,10 +54,9 @@ async function bootstrap() {
       }),
       cookie: {
         httpOnly: true,
-        secure: true,
+        secure: false,
         maxAge: 3600000,
-        sameSite: 'none',
-        domain: '.konee.shop', // 하드코딩
+        sameSite: 'lax',
         path: '/',
       },
     }),

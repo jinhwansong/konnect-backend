@@ -251,8 +251,6 @@ export class ReservationService {
       if (paymentResult.status !== 'DONE') {
         throw new BadRequestException('결제가 정상적으로 완료되지 않았습니다');
       }
-      console.log('결제가 되니?', body.paymentKey);
-      console.log('결제가 되니?2', paymentResult);
       // 정보 업데이트
       payment.paymentKey = body.paymentKey;
       payment.status = PaymentStatus.COMPLETED;

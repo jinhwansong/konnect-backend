@@ -53,7 +53,11 @@ export class MentorProfile {
       'https://fastly.picsum.photos/id/1062/200/300.jpg?hmac=e6D9R3lyQ0AtilxM2LGviSrodxvroxcpCRm2FdfNwZg',
     description: '유저프로필',
   })
-  @Column('varchar', { name: 'image', length: 200, nullable: true })
+  @Column('varchar', {
+    name: 'image',
+    length: 200,
+    nullable: true,
+  })
   image: string;
   @Column({ name: 'userId' })
   userId: number;

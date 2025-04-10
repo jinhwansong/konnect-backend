@@ -31,13 +31,9 @@ export const multerImage = () => {
           {
             id: 'webp',
             key: (req, file, cb) => {
-              const ext = '.webp';
-              const name = path.extname(file.originalname);
-              const filename =
-                path.basename(file.originalname, name) +
-                Date.now() +
-                name +
-                ext;
+              const ext = path.extname(file.originalname);
+              const basename = path.basename(file.originalname, ext);
+              const filename = basename + Date.now() + '.webp';
               cb(null, filename);
             },
             transform: (req, file, cb) => {
@@ -72,12 +68,9 @@ export const multerImage = () => {
         },
         // 파일명 조작
         filename(req, file, cb) {
-          const name = path.extname(file.originalname);
-          const filename =
-            path.basename(file.originalname, name) +
-            Date.now() +
-            name +
-            '.webp';
+          const ext = path.extname(file.originalname);
+          const basename = path.basename(file.originalname, ext);
+          const filename = basename + Date.now() + '.webp';
           cb(null, filename);
         },
       }),
