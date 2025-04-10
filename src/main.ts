@@ -18,7 +18,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: ['http://localhost:3000', process.env.CLIENT],
+    origin: ['http://localhost:3000', 'https://konnect-front-wns6.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH '],
     allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie', 'Cookie'],
@@ -40,27 +40,54 @@ async function bootstrap() {
     });
   }
   const RedisStore = connectRedis(session);
-  app.use(
-    session({
-      resave: false,
-      saveUninitialized: false,
-      secret: process.env.COOKIE_SECRET,
-      rolling: true,
-      name: 'connect.sid',
-      store: new RedisStore({
-        client: redisClient,
-        prefix: 'session:',
-        ttl: 3600,
+  if (process.env.NODE_ENV === 'production') {
+    // 운영 환경 세션 설정
+    app.use(
+      session({
+        resave: false,
+        saveUninitialized: false,
+        secret: process.env.COOKIE_SECRET,
+        rolling: true,
+        name: 'connect.sid',
+        store: new RedisStore({
+          client: redisClient,
+          prefix: 'session:',
+          ttl: 3600,
+        }),
+        cookie: {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+          maxAge: 3600000,
+          path: '/',
+        },
       }),
-      cookie: {
-        httpOnly: true,
-        secure: false,
-        maxAge: 3600000,
-        sameSite: 'lax',
-        path: '/',
-      },
-    }),
-  );
+    );
+  } else {
+    // 개발 환경 세션 설정
+    app.use(
+      session({
+        resave: false,
+        saveUninitialized: false,
+        secret: process.env.COOKIE_SECRET,
+        rolling: true,
+        name: 'connect.sid',
+        store: new RedisStore({
+          client: redisClient,
+          prefix: 'session:',
+          ttl: 3600,
+        }),
+        cookie: {
+          httpOnly: true,
+          secure: false,
+          maxAge: 3600000,
+          sameSite: 'lax',
+          path: '/',
+        },
+      }),
+    );
+  }
+
   app.use(cookieParser());
   app.use(passport.initialize());
   app.use(passport.session());

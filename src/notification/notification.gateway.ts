@@ -11,8 +11,9 @@ import { NotificationDto } from './dto/notification.request.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://konnect-front-wns6.vercel.app'],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   },
   namespace: 'noti',
 })
