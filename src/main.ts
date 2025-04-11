@@ -36,7 +36,7 @@ async function bootstrap() {
     });
   }
   const RedisStore = connectRedis(session);
-
+  app.use(cookieParser());
   app.use(
     session({
       resave: false,
@@ -68,8 +68,6 @@ async function bootstrap() {
       },
     }),
   );
-
-  app.use(cookieParser());
   app.use(passport.initialize());
   app.use(passport.session());
   // 업로드 폴더 생성

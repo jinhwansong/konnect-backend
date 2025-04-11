@@ -13,16 +13,16 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
+    console.log('세션 ID:', req.sessionID);
+    console.log('세션 쿠키:', req.sessionStore);
+
     try {
       // kakao 인증 시도
       const result = (await super.canActivate(context)) as boolean;
       // 인증 성공 시 세션에 저장
       if (result) {
-        console.log('인증시도', result);
-        console.log('세션에 저장', req);
         await super.logIn(req); // 세션에 저장
       }
-      console.log('사용자 정보:', req.user);
       return true;
     } catch (error) {
       throw new UnauthorizedException('카카오 인증에 실패했습니다.');
@@ -31,11 +31,9 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
   // 카카오 로그인으로 리다이렉션
   handleRequest(err: any, user: any, info: any, context: any) {
     if (err) {
-      console.error('카카오 인증 중 오류:', err);
       throw new UnauthorizedException('카카오 인증 중 오류가 발생했습니다.');
     }
     if (!user) {
-      console.warn('카카오 사용자 정보 없음');
       throw new UnauthorizedException(
         '카카오 사용자 정보를 가져오는데 실패했습니다.',
       );

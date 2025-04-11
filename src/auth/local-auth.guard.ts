@@ -15,10 +15,8 @@ export class LocalAuthGuard extends AuthGuard('local') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       const result = (await super.canActivate(context)) as boolean;
-      console.log('로컬가드2', result);
       if (result) {
         const request = context.switchToHttp().getRequest();
-        console.log('로컬가드', request);
         await super.logIn(request);
       }
       return true;
