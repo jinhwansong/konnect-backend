@@ -17,8 +17,6 @@ export class LocalAuthGuard extends AuthGuard('local') {
       const result = (await super.canActivate(context)) as boolean;
       if (result) {
         const request = context.switchToHttp().getRequest();
-        console.log('세션 ID:', request.sessionID); // 세션 ID 로깅
-        console.log('유저 세션:', request.session);
         await super.logIn(request);
       }
       return true;

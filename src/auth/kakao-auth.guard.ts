@@ -13,8 +13,6 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
-    console.log('세션 ID:', req.sessionID);
-    console.log('세션 쿠키:', req.sessionStore);
 
     try {
       // kakao 인증 시도
