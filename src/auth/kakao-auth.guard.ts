@@ -31,9 +31,11 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
   // 카카오 로그인으로 리다이렉션
   handleRequest(err: any, user: any, info: any, context: any) {
     if (err) {
+      console.error('카카오 인증 중 오류:', err);
       throw new UnauthorizedException('카카오 인증 중 오류가 발생했습니다.');
     }
     if (!user) {
+      console.warn('카카오 사용자 정보 없음');
       throw new UnauthorizedException(
         '카카오 사용자 정보를 가져오는데 실패했습니다.',
       );

@@ -12,7 +12,7 @@ import { NaverStrategy } from './naver.strategy';
 @Module({
   imports: [
     // jwt token을 할때는 session이 false다.
-    PassportModule.register({ session: true }),
+    PassportModule.register({ session: true, defaultStrategy: 'local' }),
     TypeOrmModule.forFeature([Users]),
   ],
   providers: [

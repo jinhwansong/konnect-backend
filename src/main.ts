@@ -34,6 +34,7 @@ async function bootstrap() {
     redisClient.on('error', (err) => {
       console.error(`Error connecting to Redis: ${err}`);
     });
+    await redisClient.connect();
     // 종료처리
     process.on('SIGINT', () => {
       redisClient.quit();
@@ -54,17 +55,21 @@ async function bootstrap() {
         ttl: 3600,
         logErrors: true,
       }),
-      callback: (err) => {
-        if (err) {
-          console.error('Session middleware error:', err);
-        }
-      },
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production' ? true : false,
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 3600000,
         path: '/',
+        domain:
+          process.env.NODE_ENV === 'production' ? '.konee.shop' : undefined,
+      },
+      callback: (err) => {
+        if (err) {
+          console.error('Session middleware error:', err);
+        } else {
+          console.log('Session middleware initialized successfully');
+        }
       },
     }),
   );
