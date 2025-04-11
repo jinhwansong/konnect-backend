@@ -17,6 +17,7 @@ declare const module: any;
 dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('trust proxy', 1);
   app.enableCors({
     origin: ['http://localhost:3000', 'https://konnect-front-wns6.vercel.app'],
     credentials: true,
@@ -30,9 +31,15 @@ async function bootstrap() {
       url: `redis://${process.env.REDIS_USER}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
       legacyMode: true,
     });
+    // Redis 연결
+    await redisClient.connect().catch(console.error);
     // 에러 핸들러
     redisClient.on('error', (err) => {
       console.error(`Error connecting to Redis: ${err}`);
+    });
+    // 연결 성공 로그
+    redisClient.on('connect', () => {
+      console.log('Redis connected successfully');
     });
   }
   const RedisStore = connectRedis(session);
@@ -56,15 +63,6 @@ async function bootstrap() {
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 3600000,
         path: '/',
-        domain:
-          process.env.NODE_ENV === 'production' ? '.konee.shop' : undefined,
-      },
-      callback: (err) => {
-        if (err) {
-          console.error('Session middleware error:', err);
-        } else {
-          console.log('Session middleware initialized successfully');
-        }
       },
     }),
   );
