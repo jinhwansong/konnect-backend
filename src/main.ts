@@ -24,26 +24,18 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie', 'Cookie'],
   });
-  // 레디스 클라이언트 생성
-  let redisClient;
-  if (!redisClient) {
-    redisClient = createClient({
-      url: `redis://${process.env.REDIS_USER}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
-      legacyMode: true,
-    });
-    // Redis 연결
-    await redisClient.connect().catch(console.error);
-    // 에러 핸들러
-    redisClient.on('error', (err) => {
-      console.error(`Error connecting to Redis: ${err}`);
-    });
-    // 연결 성공 로그
-    redisClient.on('connect', () => {
-      console.log('Redis connected successfully');
-    });
-  }
-  const RedisStore = connectRedis(session);
-  app.use(cookieParser());
+  // const RedisStore = connectRedis(session);
+  // // 레디스 클라이언트 생성
+  // const redisClient = createClient({
+  //   url: `redis://${process.env.REDIS_USER}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+  // });
+  // // 에러 핸들러
+  // redisClient.on('error', (err) => {
+  //   console.error(`Error connecting to Redis: ${err}`);
+  // });
+  // // // Redis 연결
+  // // await redisClient.connect();
+
   app.use(
     session({
       resave: false,
@@ -51,21 +43,22 @@ async function bootstrap() {
       secret: process.env.COOKIE_SECRET,
       rolling: true,
       name: 'connect.sid',
-      store: new RedisStore({
-        client: redisClient,
-        prefix: 'session:',
-        ttl: 3600,
-        logErrors: true,
-      }),
+      // store: new RedisStore({
+      //   client: redisClient,
+      //   prefix: 'session:',
+      //   ttl: 3600,
+      //   logErrors: true,
+      // }),
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production' ? true : false,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: false,
+        sameSite: 'lax',
         maxAge: 3600000,
         path: '/',
       },
     }),
   );
+  app.use(cookieParser());
   app.use(passport.initialize());
   app.use(passport.session());
   // 업로드 폴더 생성
