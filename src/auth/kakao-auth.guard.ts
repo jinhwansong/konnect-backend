@@ -18,6 +18,8 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
       const result = (await super.canActivate(context)) as boolean;
       // 인증 성공 시 세션에 저장
       if (result) {
+        console.log('인증시도', result);
+        console.log('세션에 저장', req);
         await super.logIn(req); // 세션에 저장
       }
 

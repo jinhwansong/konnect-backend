@@ -40,14 +40,8 @@ export class WebpTransformInterceptor implements NestInterceptor {
         /\.(jpg|jpeg|png|gif)$/,
         '',
       );
-      console.log('확장자 제거', nameWithoutExt);
       // WebP 파일 경로 생성
       const webpPath = path.join(parsedPath.dir, `${nameWithoutExt}.webp`);
-
-      // 디버깅: 파일 경로 로깅
-      console.log('원본 경로:', originalPath);
-      console.log('변환 경로:', webpPath);
-
       // WebP 변환 수행
       await sharp(originalPath)
         .webp({
@@ -76,7 +70,6 @@ export class WebpTransformInterceptor implements NestInterceptor {
       try {
         if (fs.existsSync(originalPath)) {
           fs.unlinkSync(originalPath);
-          console.log('원본 파일 삭제 성공:', originalPath);
         }
       } catch (deleteError) {
         console.warn(
@@ -85,14 +78,6 @@ export class WebpTransformInterceptor implements NestInterceptor {
         );
         // 나중에 정리를 위해 삭제 실패한 파일 목록 기록 가능
       }
-
-      // 디버깅: 최종 파일 정보 로깅
-      console.log('변환 완료. 파일 정보:', {
-        filename: file.filename,
-        path: file.path,
-        originalname: file.originalname,
-        mimetype: file.mimetype,
-      });
     } catch (error) {
       console.error('WebP 변환 중 오류 발생:', error);
       console.error(error.stack);

@@ -20,7 +20,7 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:3000', 'https://konnect-front-wns6.vercel.app'],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH '],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie', 'Cookie'],
   });
   // 레디스 클라이언트 생성
@@ -40,53 +40,34 @@ async function bootstrap() {
     });
   }
   const RedisStore = connectRedis(session);
-  if (process.env.NODE_ENV === 'production') {
-    // 운영 환경 세션 설정
-    app.use(
-      session({
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.COOKIE_SECRET,
-        rolling: true,
-        name: 'connect.sid',
-        store: new RedisStore({
-          client: redisClient,
-          prefix: 'session:',
-          ttl: 3600,
-        }),
-        cookie: {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'none',
-          maxAge: 3600000,
-          path: '/',
-        },
+
+  app.use(
+    session({
+      resave: false,
+      saveUninitialized: false,
+      secret: process.env.COOKIE_SECRET,
+      rolling: true,
+      name: 'connect.sid',
+      store: new RedisStore({
+        client: redisClient,
+        prefix: 'session:',
+        ttl: 3600,
+        logErrors: true,
       }),
-    );
-  } else {
-    // 개발 환경 세션 설정
-    app.use(
-      session({
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.COOKIE_SECRET,
-        rolling: true,
-        name: 'connect.sid',
-        store: new RedisStore({
-          client: redisClient,
-          prefix: 'session:',
-          ttl: 3600,
-        }),
-        cookie: {
-          httpOnly: true,
-          secure: false,
-          maxAge: 3600000,
-          sameSite: 'lax',
-          path: '/',
-        },
-      }),
-    );
-  }
+      callback: (err) => {
+        if (err) {
+          console.error('Session middleware error:', err);
+        }
+      },
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' ? true : false,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 3600000,
+        path: '/',
+      },
+    }),
+  );
 
   app.use(cookieParser());
   app.use(passport.initialize());
