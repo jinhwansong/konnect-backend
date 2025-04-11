@@ -22,7 +22,7 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
         console.log('세션에 저장', req);
         await super.logIn(req); // 세션에 저장
       }
-
+      console.log('사용자 정보:', req.user);
       return true;
     } catch (error) {
       throw new UnauthorizedException('카카오 인증에 실패했습니다.');

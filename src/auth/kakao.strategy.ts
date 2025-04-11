@@ -14,18 +14,25 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
         process.env.NODE_ENV === 'production'
           ? `${process.env.CALLBACK_URL}/users/auth/kakao/callback`
           : '/users/auth/kakao/callback',
+      passReqToCallback: true,
     });
   }
 
   async validate(
+    req: any,
     accessToken: string,
     refreshToken: string,
     profile: any,
     done: CallableFunction,
   ) {
-    const { id, username, _json } = profile;
+    console.log('Kakao Profile:', profile);
+    const { username, _json } = profile;
     const kakaoAccount = _json.kakao_account;
     const properties = _json.properties;
+    if (!kakaoAccount || !properties) {
+      console.error('Kakao account or properties missing');
+      return done(null, false);
+    }
     const phone = kakaoAccount.phone_number;
     const kakaoUser = {
       snsId: kakaoAccount.email,

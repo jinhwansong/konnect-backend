@@ -34,11 +34,6 @@ async function bootstrap() {
     redisClient.on('error', (err) => {
       console.error(`Error connecting to Redis: ${err}`);
     });
-    await redisClient.connect();
-    // 종료처리
-    process.on('SIGINT', () => {
-      redisClient.quit();
-    });
   }
   const RedisStore = connectRedis(session);
 
