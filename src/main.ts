@@ -36,11 +36,9 @@ async function bootstrap() {
     redisClient.on('error', (err) => {
       console.error(`Error connecting to Redis: ${err}`);
     });
-    // Redis 연결
-    await redisClient.connect().catch(console.error);
-    // 연결 성공 로그
-    redisClient.on('connect', () => {
-      console.log('Redis connected successfully');
+    // 종료처리
+    process.on('SIGINT', () => {
+      redisClient.quit();
     });
   }
   const RedisStore = connectRedis(session);
@@ -51,6 +49,7 @@ async function bootstrap() {
       saveUninitialized: false,
       secret: process.env.COOKIE_SECRET,
       rolling: true,
+      proxy: true,
       name: 'connect.sid',
       store: new RedisStore({
         client: redisClient,
